@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Duration slider value label: "10 seconds" / "1 second" -->
+    <plurals name="test_duration_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
+    <plurals name="total_measurements">
+        <item quantity="one">%d measurement</item>
+        <item quantity="other">%,d measurements</item>
+    </plurals>
+</resources>

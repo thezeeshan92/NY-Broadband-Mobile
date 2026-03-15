@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phase step dot for the TestInProgressFragment step indicator.
+    Default (inactive): colorOutlineVariant fill.
+    Activated state: colorPrimary fill.
+    Set view.isActivated = true in code to mark the active/completed phase.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_activated="true">
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorPrimary" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorOutlineVariant" />
+        </shape>
+    </item>
+
+</selector>

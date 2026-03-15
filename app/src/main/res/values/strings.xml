@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NY Broadband Mobile</string>
+    <string name="app_tagline">Mapping connectivity for New York communities</string>
+
+    <!--
+        Mapbox public access token (pk.ey…) — used at runtime for tile and style requests.
+        Replace YOUR_MAPBOX_PUBLIC_TOKEN_HERE with your own token from https://account.mapbox.com/
+        The token must start with pk.ey… (public token, NOT the secret sk.ey… download token).
+    -->
+    <string name="mapbox_access_token" translatable="false">YOUR_MAPBOX_PUBLIC_TOKEN_HERE</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_map">Coverage Map</string>
+    <string name="nav_results">My Results</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home screen -->
+    <string name="status_measuring">Measuring quietly</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_testing">Running speed test</string>
+    <string name="status_no_service">No signal detected</string>
+    <string name="status_queued">Saving · will sync later</string>
+
+    <!-- Passive collection notification -->
+    <string name="notif_channel_passive_title">Signal Collection</string>
+    <string name="notif_channel_passive_desc">Runs quietly in the background to measure broadband coverage</string>
+    <string name="notif_passive_title">Measuring signal quality</string>
+    <string name="notif_passive_text">Collecting coverage data for NY Broadband</string>
+    <string name="notif_passive_action_stop">Stop</string>
+
+    <string name="btn_run_test">Run Test</string>
+    <string name="btn_auto_test">Auto Test</string>
+    <string name="btn_dead_zone">Dead Zone</string>
+    <string name="btn_view_results">View My Results</string>
+    <string name="btn_recenter">Recenter map</string>
+
+    <string name="signal_label">Signal</string>
+    <string name="signal_good">Good</string>
+    <string name="signal_fair">Fair</string>
+    <string name="signal_weak">Weak</string>
+    <string name="signal_poor">No Signal</string>
+    <string name="signal_unknown">--</string>
+
+    <string name="home_empty_state">Move around to collect measurements.\nYour readings appear here as colored dots.</string>
+    <string name="location_unavailable">Location unavailable — check your device location settings.</string>
+
+    <!-- Manual test -->
+    <string name="test_title">Speed Test</string>
+    <string name="test_status_running">Testing your connection…\nThis takes about 10 seconds</string>
+    <string name="test_btn_cancel">Cancel</string>
+    <string name="test_btn_run_another">Run Another Test</string>
+    <string name="test_btn_view_details">View Full Details</string>
+    <string name="test_btn_done">Done</string>
+    <string name="test_download_label">Mbps\nDownload</string>
+    <string name="test_upload_label">Mbps\nUpload</string>
+    <string name="test_latency_label">ms\nLatency</string>
+    <string name="test_data_estimate">~15 MB of mobile data</string>
+    <string name="test_server_prefix">Server:</string>
+    <string name="test_error_no_connection">Couldn\'t reach the test server. Check your connection and try again.</string>
+    <string name="test_error_data_cap">You\'ve reached your monthly data limit. Adjust your limit in Settings.</string>
+
+    <!-- Auto / recurring -->
+    <string name="recurring_title">Automatic Testing</string>
+    <string name="recurring_subtitle">Choose how you\'re traveling.\nThe app will test as you move.</string>
+    <string name="recurring_btn_start">Start Auto Testing</string>
+    <string name="recurring_btn_stop">Stop Testing</string>
+    <string name="recurring_summary_format">A test will run every %1$s, up to %2$d times</string>
+    <string name="recurring_progress_format">Test %1$d of %2$d</string>
+
+    <!-- Dead zone — screen text -->
+    <string name="dead_zone_title">Report a Dead Zone</string>
+    <string name="dead_zone_subtitle">Tell us what\'s happening at your current location. Your report helps identify coverage gaps across New York State.</string>
+
+    <!-- Location card -->
+    <string name="dead_zone_location_section">Your location</string>
+    <string name="dead_zone_locating">Acquiring your location…</string>
+    <string name="dead_zone_location_acquired">Location acquired</string>
+    <!-- %1$.0f = accuracy in metres -->
+    <string name="dead_zone_location_accuracy_fmt">±%.0f m accuracy</string>
+    <string name="dead_zone_retry_location">Tap here to try again</string>
+
+    <!-- Type chips section -->
+    <string name="dead_zone_what_section">What\'s happening here?</string>
+    <string name="dead_zone_type_hint">Choose the option that best describes this location</string>
+    <string name="dead_zone_type_no_signal">No signal at all</string>
+    <string name="dead_zone_type_weak_indoor">Weak signal indoors</string>
+    <string name="dead_zone_type_tunnel">Tunnel or underground</string>
+    <string name="dead_zone_type_dead_stretch">Dead stretch on road</string>
+    <string name="dead_zone_type_other">Other</string>
+
+    <!-- Note field -->
+    <string name="dead_zone_note_label">Additional details (optional)</string>
+    <string name="dead_zone_note_hint">e.g. No signal on Route 9 near Lake Placid</string>
+
+    <!-- Offline banner -->
+    <string name="dead_zone_offline_note">You\'re offline right now — no problem. Your report will be saved here and uploaded automatically when you reconnect.</string>
+
+    <!-- Actions and feedback -->
+    <string name="dead_zone_btn_submit">Submit Dead Zone Report</string>
+    <string name="dead_zone_submitting">Saving…</string>
+    <string name="dead_zone_success">Report saved. Will upload when you\'re back online.</string>
+    <string name="dead_zone_success_online">Report submitted — thank you for mapping this gap.</string>
+
+    <!-- Legacy / unused but kept to avoid breaking any existing references -->
+    <string name="dead_zone_drag_hint">Drag the pin to refine location</string>
+
+    <!-- Results -->
+    <string name="results_title">My Results</string>
+    <string name="results_filter_all">All</string>
+    <string name="results_filter_speed">Speed Tests</string>
+    <string name="results_filter_passive">Passive</string>
+    <string name="results_filter_dead_zones">Dead Zones</string>
+    <string name="results_empty">No results yet.\nRun a test or start auto testing to begin.</string>
+    <string name="results_passive_label">Passive measurement</string>
+    <string name="results_dead_zone_label">Dead zone reported</string>
+
+    <string name="sync_uploaded">Synced</string>
+    <string name="sync_pending">Waiting to upload</string>
+    <string name="sync_failed">Upload failed</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_section_testing">Testing</string>
+    <string name="settings_section_map">Map</string>
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_monthly_limit">Monthly data limit</string>
+    <string name="settings_test_duration">Test duration</string>
+    <string name="settings_test_server">Test server</string>
+    <string name="settings_sign_out">Sign Out</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_feedback">Send Feedback</string>
+
+    <!-- Profile -->
+    <string name="profile_title">My Profile</string>
+    <string name="profile_section_contributions">My Contributions</string>
+    <string name="profile_section_data_usage">Data Usage This Month</string>
+    <string name="profile_stat_tests">Tests</string>
+    <string name="profile_stat_distance">km Covered</string>
+    <string name="profile_stat_dead_zones">Dead Zones</string>
+    <string name="profile_data_usage_format">%1$s MB used of %2$s MB</string>
+    <string name="profile_data_reset_format">Resets on %1$s</string>
+    <string name="profile_motivational">You\'ve helped map New York communities.</string>
+    <string name="profile_delete_account">Delete Account</string>
+    <string name="profile_guest_label">Guest mode — data stays on this device</string>
+
+    <!-- Results screen — filter chips and empty state -->
+    <string name="filter_all">All</string>
+    <string name="filter_speed_tests">Speed Tests</string>
+    <string name="filter_passive">Passive</string>
+    <string name="filter_dead_zones">Dead Zones</string>
+    <string name="results_empty_title">No measurements yet</string>
+    <string name="results_empty_body">Run a test or start auto testing\nto see results here.</string>
+
+    <!-- Settings screen — additional rows -->
+    <string name="settings_profile">Profile</string>
+    <string name="settings_section_collection">Data Collection</string>
+    <string name="settings_section_usage">Usage</string>
+    <string name="settings_passive_collection">Passive Collection</string>
+    <string name="settings_passive_collection_desc">Records signal quality in the background every minute</string>
+    <string name="settings_auto_test">Automatic Testing</string>
+    <string name="settings_auto_test_desc">Runs a speed test periodically while you travel</string>
+    <string name="settings_total_measurements">Total Measurements</string>
+    <string name="settings_data_this_month">Data Used This Month</string>
+    <string name="data_usage_fmt">%.1f MB</string>
+
+    <!-- Profile screen -->
+    <string name="profile_section_account">Account</string>
+    <string name="profile_member_since">Member since</string>
+    <string name="profile_sign_out">Sign Out</string>
+
+    <!-- Placeholder destinations -->
+    <string name="manual_test_title">Speed Test</string>
+    <string name="recurring_setup_title">Auto Test Setup</string>
+    <string name="test_result_title">Test Result</string>
+    <string name="placeholder_coming_soon">Coming soon — full implementation in next sprint</string>
+
+    <!-- Generic actions -->
+    <string name="action_open_settings">Open Settings</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         ONBOARDING FLOW
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Step counter label: "Step 1 of 4" -->
+    <string name="onboarding_step_of">Step %1$d of %2$d</string>
+
+    <!-- ── Welcome screen ── -->
+    <string name="onboarding_welcome_title">Help map New York\'s broadband</string>
+    <string name="onboarding_welcome_body">NY Broadband Mobile crowdsources mobile coverage
+        data across New York State. Every measurement you collect helps identify gaps
+        in connectivity for rural and underserved communities.</string>
+    <string name="onboarding_welcome_cta">Get Started</string>
+
+    <!-- ── Sign in / Guest decision ── -->
+    <string name="onboarding_signin_title">Who\'s mapping today?</string>
+    <string name="onboarding_signin_body">Sign in to back up your data and access it across
+        devices. Or continue as a guest — your measurements stay on this phone until
+        you decide to create an account.</string>
+    <string name="onboarding_signin_google">Sign in with Google</string>
+    <string name="onboarding_signin_guest">Continue as Guest</string>
+    <string name="onboarding_signin_terms">By continuing, you agree to the NY Broadband
+        privacy policy. Location data is used only for coverage mapping.</string>
+
+    <!-- ── Permission: Foreground Location ──
+         READ BY A NON-TECHNICAL COMMUNITY MEMBER.
+         Plain language — no jargon.                                          -->
+    <string name="perm_location_title">Your location powers the map</string>
+    <string name="perm_location_body">NY Broadband needs to know where you are to record
+        signal measurements on the map. Without location access, we can\'t show you
+        or others where the coverage gaps are.</string>
+    <!-- Bullet: what this permission IS used for -->
+    <string name="perm_location_bullet_uses">✓  Tags signal readings to your location on the coverage map</string>
+    <!-- Bullets: what it is NOT used for -->
+    <string name="perm_location_bullet_no_share">✗  Your location is never sold or shared with advertisers</string>
+    <string name="perm_location_bullet_no_ads">✗  Not used for any advertising or tracking purpose</string>
+    <string name="perm_location_allow">Allow Location Access</string>
+
+    <!-- ── Permission: Background Location ──
+         Two versions — one for API 29, one for API 30+ (Settings-only path).  -->
+    <string name="perm_background_title">Keep measuring as you travel</string>
+    <!-- API 29: system dialog still available -->
+    <string name="perm_background_body">To collect signal data even with the screen off
+        or when you switch to another app, allow NY Broadband to access your location
+        in the background. This makes the coverage map accurate during drives and
+        commutes — the most useful measurement windows.</string>
+    <!-- API 30+: dialog no longer shown by Android; must use Settings -->
+    <string name="perm_background_body_v30">To collect signal data while the screen is off,
+        NY Broadband needs background location access. Tap the button below and then
+        choose \"Allow all the time\" on the next screen.</string>
+    <!-- Blue info card shown only on API 30+ -->
+    <string name="perm_background_settings_note">Android will open your Location permission
+        settings. Look for \"NY Broadband\" and change it to \"Allow all the time\".</string>
+    <!-- Button labels (set in code based on API level) -->
+    <string name="perm_background_allow">Allow Background Access</string>
+    <string name="perm_background_open_settings">Open Location Settings</string>
+    <string name="perm_background_skip">Skip — I\'ll measure manually</string>
+    <!-- Bullets -->
+    <string name="perm_background_bullet_why">✓  Enables passive signal collection while you drive or walk</string>
+    <string name="perm_background_bullet_battery">✓  Designed to use minimal battery — reads signal, not continuous GPS</string>
+
+    <!-- ── Permission: READ_PHONE_STATE ──
+         Explain what signal data means without using technical terms.         -->
+    <string name="perm_phone_state_title">Read your network signal</string>
+    <string name="perm_phone_state_body">NY Broadband reads your phone\'s signal strength
+        and network type — for example, whether you\'re on 4G LTE or 5G, and how
+        strong the connection is. This is the actual coverage data that gets recorded
+        on the map.</string>
+    <!-- Bullets -->
+    <string name="perm_phone_state_bullet_reads">✓  Reads signal strength (bars) and network type (4G / 5G)</string>
+    <string name="perm_phone_state_bullet_no_calls">✗  Does not access calls, messages, or your contacts</string>
+    <string name="perm_phone_state_bullet_no_monitor">✗  Does not track or record call activity</string>
+    <string name="perm_phone_state_allow">Allow Signal Reading</string>
+
+    <!-- ── Permission: POST_NOTIFICATIONS (API 33+ only) ──
+         Explain why a background service needs to show a notification.       -->
+    <string name="perm_notifications_title">Know when it\'s running</string>
+    <string name="perm_notifications_body">When NY Broadband is quietly collecting signal
+        data in the background, Android requires a small notification so you can always
+        see it and turn it off. You\'ll only ever get one notification from this app —
+        no alerts, no messages.</string>
+    <!-- Bullets -->
+    <string name="perm_notifications_bullet_status">✓  Shows one small status notification when background collection is active</string>
+    <string name="perm_notifications_bullet_no_marketing">✗  No alerts, reminders, or promotional messages — ever</string>
+    <string name="perm_notifications_allow">Allow Notifications</string>
+    <string name="perm_notifications_skip">Skip for now</string>
+
+    <!-- Shared "Skip" label used on location and phone state screens -->
+    <string name="perm_skip">Not now — I\'ll decide later</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         ACTIVE TEST FLOW
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ManualTestFragment (Run Test screen) -->
+    <string name="test_manual_title">Speed Test</string>
+    <string name="test_manual_subtitle">Measure your download and upload speeds. Uses a small amount of mobile data.</string>
+    <string name="test_duration_label">Duration</string>
+    <string name="test_start_btn">Run Speed Test</string>
+    <string name="test_server_label">Server</string>
+    <string name="test_server_auto">Automatic (best available)</string>
+    <string name="test_server_region_auto">Server selected automatically at test time</string>
+    <string name="test_current_signal_label">Current Signal</string>
+    <!-- format: "~12.5 MB estimated" -->
+    <string name="test_data_estimate_fmt">~%.1f MB estimated mobile data</string>
+    <string name="test_data_estimate_default">Estimated data usage will appear here</string>
+
+    <!-- TestInProgressFragment -->
+    <string name="test_in_progress_title">Running Test</string>
+    <string name="test_phase_latency">Latency</string>
+    <string name="test_phase_download">Download</string>
+    <string name="test_phase_upload">Upload</string>
+    <string name="test_phase_starting">Starting…</string>
+    <string name="test_phase_done">Done</string>
+    <string name="test_phase_failed">Failed</string>
+    <string name="test_speed_unit_mbps">Mbps</string>
+    <string name="test_speed_unit_latency">ms  Latency</string>
+    <string name="test_latency_fmt">%d ms</string>
+
+    <!-- Cancel confirmation dialog -->
+    <string name="test_cancel_title">Cancel test?</string>
+    <string name="test_cancel_message">The test is still running. If you leave now, no result will be saved.</string>
+    <string name="test_cancel_confirm">Yes, cancel</string>
+    <string name="test_cancel_dismiss">Keep running</string>
+
+    <!-- TestResultFragment -->
+    <string name="test_result_row_latency">Latency</string>
+    <string name="test_result_row_jitter">Jitter</string>
+    <string name="test_result_row_network">Network</string>
+    <string name="test_result_row_carrier">Carrier</string>
+    <string name="test_result_row_server">Server</string>
+    <string name="test_result_row_duration">Duration</string>
+    <string name="test_result_row_time">Measured at</string>
+    <!-- format strings -->
+    <string name="test_result_latency_fmt">%d ms</string>
+    <string name="test_result_jitter_fmt">%d ms</string>
+    <string name="test_result_duration_fmt">%d seconds</string>
+
+    <!-- Active test notification channel -->
+    <string name="notif_channel_active_test_title">Speed Test</string>
+    <string name="notif_channel_active_test_desc">Shows progress and results of active speed tests</string>
+    <string name="notif_active_test_title">Speed test in progress…</string>
+    <string name="notif_active_test_done">Speed test complete</string>
+    <string name="notif_active_test_failed">Speed test failed</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         RESULTS / HISTORY SCREEN
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Results list rows -->
+    <string name="results_item_speed_fmt">%.1f Mbps download</string>
+    <!-- %1$s = "↓ 23.4"  %2$s = "↑ 8.1" -->
+    <string name="results_item_speed_detail">%1$s  %2$s Mbps</string>
+
+    <!-- Result detail — tier badge sub-labels -->
+    <string name="result_sub_speed_test">Speed test</string>
+    <string name="result_sub_passive">Passive reading</string>
+    <string name="result_sub_dead_zone">Dead zone report</string>
+    <string name="result_not_found">Result not found</string>
+
+    <!-- Speed card labels -->
+    <string name="result_download_label">Download</string>
+    <string name="result_upload_label">Upload</string>
+
+    <!-- Placeholder data badge (PlaceholderSpeedTestEngine results only) -->
+    <string name="result_placeholder_badge">SIMULATED DATA — NOT REAL</string>
+
+    <!-- Advanced / technical details section (collapsed by default) -->
+    <string name="result_advanced_show">▸ Technical details</string>
+    <string name="result_advanced_hide">▾ Hide technical details</string>
+    <string name="result_adv_rsrp">Signal strength (RSRP)</string>
+    <string name="result_adv_rsrp_fmt">%d dBm</string>
+    <string name="result_adv_signal_bars">Signal bars</string>
+    <string name="result_adv_gps_accuracy">GPS accuracy</string>
+    <string name="result_adv_device">Device</string>
+    <string name="result_adv_app_version">App version</string>
+    <string name="result_adv_session_id">Session ID</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_signal_dot">Signal quality indicator</string>
+    <string name="cd_sync_icon">Upload status</string>
+    <string name="cd_menu_icon">Profile and settings</string>
+    <string name="cd_recenter">Return map to current location</string>
+</resources>

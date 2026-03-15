@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "842834632798",
+    "project_id": "ny-broadband-mobile",
+    "storage_bucket": "ny-broadband-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842834632798:android:98e54ce746295fef7954cf",
+        "android_client_info": {
+          "package_name": "com.nybroadband.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFs0IldCB8rgV6yL1eFVesKUqNMA3bimc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.NYBroadband" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/ny_blue_300</item>
+        <item name="colorOnPrimary">@color/ny_blue_900</item>
+        <item name="colorPrimaryContainer">@color/ny_blue_800</item>
+        <item name="colorOnPrimaryContainer">@color/ny_blue_100</item>
+        <item name="colorSecondary">@color/ny_teal_300</item>
+        <item name="colorOnSecondary">@color/ny_blue_900</item>
+
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/on_surface_dark</item>
+        <item name="colorSurfaceVariant">@color/surface_variant_dark</item>
+        <item name="colorOutline">@color/outline_dark</item>
+
+        <item name="colorError">#F87171</item>
+        <item name="colorOnError">@color/surface_dark</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
+    </style>
+
+    <style name="Theme.NYBroadband.Splash" parent="Theme.NYBroadband">
+        <item name="android:windowBackground">@color/surface_dark</item>
+        <item name="android:statusBarColor">@color/surface_dark</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
+    </style>
+
+</resources>

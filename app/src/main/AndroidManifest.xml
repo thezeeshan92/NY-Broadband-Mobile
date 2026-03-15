@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Location -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Signal reading -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- Network -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Foreground service — both generic and typed required for API 34 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Keep CPU awake during passive collection -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Notification permission — runtime grant required on API 33+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".NYBroadbandApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NYBroadband"
+        tools:targetApi="34">
+
+        <!--
+            OnboardingActivity is the true launcher entry point.
+            MainActivity checks OnboardingPrefs at startup and redirects here
+            if onboarding has not been completed.
+        -->
+        <activity
+            android:name=".presentation.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.NYBroadband" />
+
+        <!--
+            MainActivity hosts the main tab navigation (map, results, settings).
+            Not exported — always reached via OnboardingActivity or deep links.
+        -->
+        <activity
+            android:name=".presentation.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            PassiveCollectionService: runs a 60-second signal sampling loop.
+            foregroundServiceType="location" is mandatory on API 34+.
+        -->
+        <service
+            android:name=".service.PassiveCollectionService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <!--
+            ActiveTestService: drives recurring preset test loops.
+            Also requires location type for GPS access while running.
+        -->
+        <service
+            android:name=".service.ActiveTestService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <!-- Mapbox access token — value injected from secrets.xml (git-ignored) -->
+        <meta-data
+            android:name="com.mapbox.maps.token"
+            android:value="@string/mapbox_access_token" />
+
+        <!--
+            Remove the default WorkManager auto-initializer so that Hilt can supply
+            its own HiltWorkerFactory via Configuration.Provider in NYBroadbandApp.
+            Without this, WorkManager initializes before Hilt's component is ready.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>

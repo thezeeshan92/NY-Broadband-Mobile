@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Layout grid -->
+    <dimen name="screen_margin">16dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_gap">8dp</dimen>
+    <dimen name="section_gap">24dp</dimen>
+
+    <!-- Bottom sheet -->
+    <dimen name="bottom_sheet_peek_height">88dp</dimen>
+    <dimen name="bottom_sheet_corner_radius">16dp</dimen>
+
+    <!-- Drag handle -->
+    <dimen name="drag_handle_width">40dp</dimen>
+    <dimen name="drag_handle_height">4dp</dimen>
+    <dimen name="drag_handle_corner_radius">2dp</dimen>
+    <dimen name="drag_handle_margin_top">8dp</dimen>
+    <dimen name="drag_handle_margin_bottom">12dp</dimen>
+
+    <!-- Touch targets — minimum 48dp per accessibility guidelines -->
+    <dimen name="min_touch_target">48dp</dimen>
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_height_large">56dp</dimen>
+
+    <!-- Status chip -->
+    <dimen name="status_chip_height">32dp</dimen>
+
+    <!-- Signal dot on map / results list -->
+    <dimen name="signal_dot_size">12dp</dimen>
+
+    <!-- Map FAB -->
+    <!-- margin_bottom measured from the padded bottom of the CoordinatorLayout,
+         which sits at the top of the BottomNavigationView after insets are applied.
+         peek_height (88) + 16dp gap = 104dp -->
+    <dimen name="map_fab_margin">16dp</dimen>
+    <dimen name="map_fab_margin_bottom">104dp</dimen>
+
+    <!-- Icons -->
+    <dimen name="icon_size_action">24dp</dimen>
+    <dimen name="icon_size_nav">24dp</dimen>
+
+    <!-- Typography -->
+    <dimen name="text_headline_large">22sp</dimen>
+    <dimen name="text_headline_medium">20sp</dimen>
+    <dimen name="text_title">16sp</dimen>
+    <dimen name="text_body">15sp</dimen>
+    <dimen name="text_body_small">13sp</dimen>
+    <dimen name="text_label">12sp</dimen>
+    <dimen name="text_caption">11sp</dimen>
+    <dimen name="text_metric">28sp</dimen>
+</resources>

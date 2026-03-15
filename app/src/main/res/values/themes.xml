@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.NYBroadband" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Brand colors -->
+        <item name="colorPrimary">@color/ny_blue_600</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/ny_blue_100</item>
+        <item name="colorOnPrimaryContainer">@color/ny_blue_900</item>
+        <item name="colorSecondary">@color/ny_teal_600</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Surfaces -->
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/on_surface_light</item>
+        <item name="colorSurfaceVariant">@color/surface_variant_light</item>
+        <item name="colorOutline">@color/outline_light</item>
+
+        <!-- Error -->
+        <item name="colorError">#DC2626</item>
+        <item name="colorOnError">@color/white</item>
+
+        <!-- Status bar: transparent so map bleeds to edge -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/surface_light</item>
+    </style>
+
+    <!-- Full-screen dialog used by ManualTestFragment -->
+    <style name="Theme.NYBroadband.FullScreenDialog" parent="Theme.NYBroadband">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+
+    <!-- Splash screen theme — solid brand navy, no action bar -->
+    <style name="Theme.NYBroadband.Splash" parent="Theme.NYBroadband">
+        <item name="android:windowBackground">@color/ny_blue_900</item>
+        <item name="android:statusBarColor">@color/ny_blue_900</item>
+        <item name="android:navigationBarColor">@color/ny_blue_900</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+</resources>

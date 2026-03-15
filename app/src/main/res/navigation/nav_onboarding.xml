@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_onboarding"
+    app:startDestination="@id/welcomeFragment">
+
+    <!--
+        Onboarding flow (sequential):
+          Welcome → SignIn → Location → Background (API 29+) → PhoneState → Notifications (API 33+)
+
+        API-level branching is handled in code, not in the nav graph.
+        The last active fragment calls viewModel.onOnboardingComplete() to launch MainActivity.
+    -->
+
+    <!-- Step 0: Welcome -->
+    <fragment
+        android:id="@+id/welcomeFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.WelcomeFragment"
+        android:label="Welcome"
+        tools:layout="@layout/fragment_welcome">
+
+        <action
+            android:id="@+id/action_welcome_to_signIn"
+            app:destination="@id/signInFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
+    </fragment>
+
+    <!-- Step 1: Sign In / Guest -->
+    <fragment
+        android:id="@+id/signInFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.SignInFragment"
+        android:label="Sign In"
+        tools:layout="@layout/fragment_sign_in">
+
+        <action
+            android:id="@+id/action_signIn_to_permissionLocation"
+            app:destination="@id/permissionLocationFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <!-- Step 2: Foreground Location (required on all API levels) -->
+    <fragment
+        android:id="@+id/permissionLocationFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.permission.PermissionLocationFragment"
+        android:label="Location Permission"
+        tools:layout="@layout/fragment_permission_location">
+
+        <!-- API 29+ → ask for background location next -->
+        <action
+            android:id="@+id/action_location_to_background"
+            app:destination="@id/permissionBackgroundFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+
+        <!-- API 26–28 (background implicit) or location skipped → jump to phone state -->
+        <action
+            android:id="@+id/action_location_to_phoneState"
+            app:destination="@id/permissionPhoneStateFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <!--
+        Step 3: Background Location (Android 10 / API 29+ only).
+
+        On API 29: system shows a standard permission dialog with "Allow all the time".
+        On API 30+: the system no longer shows a dialog for BACKGROUND_LOCATION —
+                    the app must direct the user to system Settings instead.
+        Fragment handles both cases and detects grant on onResume().
+    -->
+    <fragment
+        android:id="@+id/permissionBackgroundFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.permission.PermissionBackgroundFragment"
+        android:label="Background Location"
+        tools:layout="@layout/fragment_permission_background">
+
+        <action
+            android:id="@+id/action_background_to_phoneState"
+            app:destination="@id/permissionPhoneStateFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <!-- Step 4: READ_PHONE_STATE (needed to read signal strength / network type) -->
+    <fragment
+        android:id="@+id/permissionPhoneStateFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.permission.PermissionPhoneStateFragment"
+        android:label="Signal Permission"
+        tools:layout="@layout/fragment_permission_phone_state">
+
+        <!-- API 33+ → show notifications screen next -->
+        <action
+            android:id="@+id/action_phoneState_to_notifications"
+            app:destination="@id/permissionNotificationsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+
+        <!--
+            API 26–32: notifications are granted by default; this is the last step.
+            Fragment calls viewModel.onOnboardingComplete() instead of navigating here.
+        -->
+    </fragment>
+
+    <!--
+        Step 5: POST_NOTIFICATIONS (Android 13 / API 33+ only).
+        This is the last step; fragment calls viewModel.onOnboardingComplete() on completion.
+    -->
+    <fragment
+        android:id="@+id/permissionNotificationsFragment"
+        android:name="com.nybroadband.mobile.presentation.onboarding.permission.PermissionNotificationsFragment"
+        android:label="Notifications"
+        tools:layout="@layout/fragment_permission_notifications" />
+
+</navigation>

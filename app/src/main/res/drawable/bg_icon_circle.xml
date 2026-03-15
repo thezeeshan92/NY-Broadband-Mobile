@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Filled circle used as background for permission screen icons -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/ny_blue_100" />
+    <size android:width="96dp" android:height="96dp" />
+</shape>

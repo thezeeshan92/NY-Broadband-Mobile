@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeMapFragment">
+
+    <!-- ===== Tab 1: Coverage Map ===== -->
+    <fragment
+        android:id="@+id/homeMapFragment"
+        android:name="com.nybroadband.mobile.presentation.home.HomeMapFragment"
+        android:label="Coverage Map"
+        tools:layout="@layout/fragment_home_map">
+
+        <action
+            android:id="@+id/action_home_to_manualTest"
+            app:destination="@id/manualTestFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
+
+        <action
+            android:id="@+id/action_home_to_recurringSetup"
+            app:destination="@id/recurringSetupFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
+
+        <action
+            android:id="@+id/action_home_to_deadZone"
+            app:destination="@id/deadZoneFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
+
+        <action
+            android:id="@+id/action_home_to_resultDetail"
+            app:destination="@id/testResultFragment" />
+    </fragment>
+
+    <!-- Manual test — full-screen fragment (converted from dialog; navigates forward to in-progress) -->
+    <fragment
+        android:id="@+id/manualTestFragment"
+        android:name="com.nybroadband.mobile.presentation.test.ManualTestFragment"
+        android:label="Speed Test"
+        tools:layout="@layout/fragment_manual_test">
+
+        <action
+            android:id="@+id/action_manualTest_to_testInProgress"
+            app:destination="@id/testInProgressFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/manualTestFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <!-- Test in progress — runs the active test, navigates to result on completion -->
+    <fragment
+        android:id="@+id/testInProgressFragment"
+        android:name="com.nybroadband.mobile.presentation.test.TestInProgressFragment"
+        android:label="Running Test"
+        tools:layout="@layout/fragment_test_in_progress">
+
+        <argument
+            android:name="arg_duration_sec"
+            app:argType="integer"
+            android:defaultValue="10" />
+
+        <argument
+            android:name="arg_server_id"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <action
+            android:id="@+id/action_testInProgress_to_testResult"
+            app:destination="@id/testResultFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/testInProgressFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <!-- Recurring setup — full screen -->
+    <fragment
+        android:id="@+id/recurringSetupFragment"
+        android:name="com.nybroadband.mobile.presentation.test.RecurringSetupFragment"
+        android:label="Automatic Testing"
+        tools:layout="@layout/fragment_recurring_setup" />
+
+    <!-- Dead zone report — full screen -->
+    <fragment
+        android:id="@+id/deadZoneFragment"
+        android:name="com.nybroadband.mobile.presentation.deadzone.DeadZoneFragment"
+        android:label="Report a Dead Zone"
+        tools:layout="@layout/fragment_dead_zone" />
+
+    <!-- Shared result detail — reached from Home and Results -->
+    <fragment
+        android:id="@+id/testResultFragment"
+        android:name="com.nybroadband.mobile.presentation.test.TestResultFragment"
+        android:label="Result"
+        tools:layout="@layout/fragment_test_result">
+        <argument
+            android:name="measurementId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- ===== Tab 2: My Results ===== -->
+    <fragment
+        android:id="@+id/resultsFragment"
+        android:name="com.nybroadband.mobile.presentation.results.ResultsFragment"
+        android:label="My Results"
+        tools:layout="@layout/fragment_results">
+
+        <action
+            android:id="@+id/action_results_to_resultDetail"
+            app:destination="@id/testResultFragment" />
+    </fragment>
+
+    <!-- ===== Tab 3: Settings ===== -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.nybroadband.mobile.presentation.settings.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings">
+
+        <action
+            android:id="@+id/action_settings_to_profile"
+            app:destination="@id/profileFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.nybroadband.mobile.presentation.profile.ProfileFragment"
+        android:label="My Profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

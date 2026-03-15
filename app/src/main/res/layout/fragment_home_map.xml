@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    CoordinatorLayout root: allows BottomSheetBehavior to work correctly
+    and lets the MapView bleed behind all overlays (including the bottom nav).
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false">
+
+    <!-- Full-screen map rendered below all overlays -->
+    <com.mapbox.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--
+        Auto-test banner — full-width strip at the top of the screen.
+        Hidden by default; shown by renderReadyState() when autoTestActive = true.
+    -->
+    <TextView
+        android:id="@+id/autoTestBanner"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="center"
+        android:text="@string/status_measuring"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:background="@color/status_measuring"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!--
+        Status chip: top-start, floating above the map.
+        marginTop=48dp keeps it below the status bar on most devices.
+    -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/statusChip"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/status_chip_height"
+        android:layout_marginStart="@dimen/screen_margin"
+        android:layout_marginTop="48dp"
+        android:text="@string/status_idle"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        app:chipBackgroundColor="@color/status_idle"
+        app:chipStartPadding="10dp"
+        app:chipEndPadding="10dp"
+        app:chipMinHeight="@dimen/status_chip_height"
+        app:chipCornerRadius="16dp"
+        style="@style/Widget.Material3.Chip.Assist" />
+
+    <!--
+        Recenter FAB: bottom-end of the screen, above the bottom sheet peek area.
+        The CoordinatorLayout's padded bottom == top of BottomNavigationView (inset applied
+        in HomeMapFragment.applyBottomOffset). marginBottom is measured from that reference:
+        map_fab_margin_bottom = peek_height (88dp) + 16dp gap = 104dp
+    -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabRecenter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/map_fab_margin"
+        android:layout_marginBottom="@dimen/map_fab_margin_bottom"
+        android:src="@android:drawable/ic_menu_mylocation"
+        android:contentDescription="@string/cd_recenter"
+        app:fabSize="mini"
+        app:backgroundTint="?attr/colorSurface"
+        app:tint="?attr/colorPrimary"
+        app:elevation="4dp" />
+
+    <!--
+        Persistent bottom sheet — 3 states:
+          COLLAPSED     (peekHeight = 88dp): drag handle + 3 action buttons
+          HALF_EXPANDED (~40% of screen):    + signal card
+          EXPANDED      (~75% of screen):    + "View My Results" link
+    -->
+    <!--
+        layout_height MUST be match_parent, not wrap_content.
+        BottomSheetBehavior.getCollapsedOffset() = Math.max(parentH - peekH, fitToContentsOffset).
+        fitToContentsOffset = parentH - childHeight. With wrap_content (childHeight≈80dp = navBar
+        height), fitToContentsOffset clamps the sheet to exactly the nav-bar level, making it
+        invisible. With match_parent (childHeight = parentH), fitToContentsOffset = 0, so the
+        clamp has no effect and the sheet collapses to (parentH - peekH) as intended.
+    -->
+    <LinearLayout
+        android:id="@+id/bottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:behavior_peekHeight="@dimen/bottom_sheet_peek_height"
+        app:behavior_hideable="false"
+        app:behavior_draggable="true"
+        app:behavior_halfExpandedRatio="0.40">
+
+        <!-- Drag handle -->
+        <View
+            android:id="@+id/dragHandle"
+            android:layout_width="@dimen/drag_handle_width"
+            android:layout_height="@dimen/drag_handle_height"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/drag_handle_margin_top"
+            android:layout_marginBottom="@dimen/drag_handle_margin_bottom"
+            android:background="@drawable/bg_drag_handle" />
+
+        <!--
+            Quick-action buttons — always visible in peek area.
+            Three equal-weight pills: Run Test (filled) / Auto Test / Dead Zone (outlined).
+        -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/screen_margin"
+            android:paddingEnd="@dimen/screen_margin"
+            android:paddingBottom="@dimen/card_gap">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRunTest"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="@string/btn_run_test"
+                android:textSize="13sp"
+                style="@style/Widget.Material3.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAutoTest"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="@string/btn_auto_test"
+                android:textSize="13sp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeadZone"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/button_height"
+                android:layout_weight="1"
+                android:text="@string/btn_dead_zone"
+                android:textSize="13sp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        </LinearLayout>
+
+        <!--
+            Signal card — hidden when COLLAPSED, shown at HALF_EXPANDED and EXPANDED.
+            Visibility is toggled by BottomSheetCallback in HomeMapFragment.
+        -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/signalCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/screen_margin"
+            android:layout_marginEnd="@dimen/screen_margin"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:visibility="gone"
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            tools:visibility="visible">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/card_padding">
+
+                <!-- "SIGNAL" label -->
+                <TextView
+                    android:id="@+id/tvSignalLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/signal_label"
+                    android:textSize="@dimen/text_label"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:letterSpacing="0.04"
+                    android:textAllCaps="true"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- Quality text: "Good" / "Fair" / "Weak" / "No Signal" -->
+                <TextView
+                    android:id="@+id/tvSignalQuality"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="2dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvSignalLabel"
+                    tools:text="Good" />
+
+                <!-- Network: "4G LTE · Verizon" -->
+                <TextView
+                    android:id="@+id/tvNetworkInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/text_body_small"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="40dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/signalDot"
+                    app:layout_constraintTop_toBottomOf="@id/tvSignalQuality"
+                    tools:text="4G LTE · Verizon" />
+
+                <!--
+                    Signal tier color dot — top-end of the card.
+                    Background tint set programmatically to match the signal tier color.
+                -->
+                <View
+                    android:id="@+id/signalDot"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:background="@drawable/bg_signal_dot"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--
+            "View My Results" link — shown only when sheet is fully EXPANDED.
+            Tapping navigates to the Results tab via BottomNavigationView.
+            Visibility is toggled by BottomSheetCallback in HomeMapFragment.
+        -->
+        <TextView
+            android:id="@+id/tvViewResults"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/min_touch_target"
+            android:gravity="center"
+            android:text="@string/btn_view_results"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="@dimen/text_body"
+            android:background="?attr/selectableItemBackground"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

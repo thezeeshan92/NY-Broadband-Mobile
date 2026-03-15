@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------
+# Android / Gradle
+# ---------------------------------------------------------------
+*.iml
+.gradle/
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.orig
+
+# Generated build outputs
+app/build/
+**/build/
+
+# Gradle wrapper jar (generated, not committed)
+gradle/wrapper/gradle-wrapper.jar
+
+# ---------------------------------------------------------------
+# Secrets / credentials  (regenerate locally — see README)
+# ---------------------------------------------------------------
+# local.properties contains the Android SDK path
+local.properties
+
+# Keystore files
+*.jks
+*.keystore
+keystore.properties
+
+# ---------------------------------------------------------------
+# IDE specific
+# ---------------------------------------------------------------
+*.swp
+*.swo
+*~
+.idea/
+*.class
+
+# IntelliJ
+out/
+.idea_modules/
+
+# VS Code
+.vscode/
+
+# ---------------------------------------------------------------
+# OS generated
+# ---------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

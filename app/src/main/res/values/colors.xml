@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- NY Broadband Office brand palette -->
+    <color name="ny_blue_100">#DBEAFE</color>
+    <color name="ny_blue_300">#93C5FD</color>
+    <color name="ny_blue_600">#1D4ED8</color>
+    <color name="ny_blue_800">#1E40AF</color>
+    <color name="ny_blue_900">#1E3A8A</color>
+    <color name="ny_blue_700">#0D47A1</color>
+    <color name="ny_teal_300">#5EEAD4</color>
+    <color name="ny_teal_600">#0D9488</color>
+
+
+    <!-- Signal quality — used for map dots, status chips, badges -->
+    <color name="signal_good">#16A34A</color>
+    <color name="signal_fair">#D97706</color>
+    <color name="signal_weak">#EA580C</color>
+    <color name="signal_poor">#DC2626</color>
+    <color name="signal_none">#6B7280</color>
+
+    <!-- Collection status chip backgrounds -->
+    <color name="status_measuring">#16A34A</color>
+    <color name="status_idle">#6B7280</color>
+    <color name="status_testing">#1D4ED8</color>
+    <color name="status_no_service">#DC2626</color>
+    <color name="status_queued">#D97706</color>
+
+    <!-- Surface — light mode -->
+    <color name="surface_light">#FFFFFF</color>
+    <color name="on_surface_light">#111827</color>
+    <color name="surface_variant_light">#F3F4F6</color>
+    <color name="outline_light">#D1D5DB</color>
+
+    <!-- Surface — dark mode -->
+    <color name="surface_dark">#111827</color>
+    <color name="on_surface_dark">#F9FAFB</color>
+    <color name="surface_variant_dark">#1F2937</color>
+    <color name="outline_dark">#374151</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Bottom sheet drag handle -->
+    <color name="drag_handle">#D1D5DB</color>
+    <color name="drag_handle_dark">#374151</color>
+    <color name="selector_nav_icon">#2E7D32</color>
+
+</resources>
