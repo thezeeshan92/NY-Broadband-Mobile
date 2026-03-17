@@ -85,6 +85,15 @@ enum class FailureReason {
 /**
  * Raw output from [SpeedTestEngine] after a successful test run.
  * Internal to the engine/orchestrator boundary — not exposed to the UI layer.
+ *
+ * NDT7 extended metrics (all nullable — only populated by [Ndt7SpeedTestEngine]):
+ *   [minRttUs]        — Minimum RTT from TCPInfo, microseconds.
+ *   [meanRttUs]       — Smoothed mean RTT from TCPInfo, microseconds.
+ *   [rttVarUs]        — RTT variance (jitter proxy) from TCPInfo, microseconds.
+ *   [retransmitRate]  — BytesRetrans / BytesSent; NDT7's packet-loss proxy (0.0–1.0).
+ *   [bbrBandwidthBps] — BBR bandwidth estimate, bits/sec.
+ *   [bbrMinRttUs]     — BBR minimum RTT, microseconds.
+ *   [serverUuid]      — NDT7 test UUID from the locate API (links DL + UL runs).
  */
 data class RawTestResult(
     val downloadMbps: Double,
@@ -95,7 +104,16 @@ data class RawTestResult(
     val bytesUploaded: Long,
     val testDurationSec: Int,
     val serverName: String,
-    val serverLocation: String?
+    val serverLocation: String?,
+
+    // ── NDT7 TCP/BBR extended metrics ─────────────────────────────────────
+    val minRttUs: Long?        = null,
+    val meanRttUs: Long?       = null,
+    val rttVarUs: Long?        = null,
+    val retransmitRate: Double? = null,
+    val bbrBandwidthBps: Long? = null,
+    val bbrMinRttUs: Long?     = null,
+    val serverUuid: String?    = null
 )
 
 /**

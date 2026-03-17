@@ -1,6 +1,6 @@
 package com.nybroadband.mobile.di
 
-import com.nybroadband.mobile.engine.PlaceholderSpeedTestEngine
+import com.nybroadband.mobile.engine.Ndt7SpeedTestEngine
 import com.nybroadband.mobile.engine.SpeedTestEngine
 import dagger.Binds
 import dagger.Module
@@ -9,10 +9,9 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Binds [SpeedTestEngine] to [PlaceholderSpeedTestEngine] for the MVP build.
+ * Binds [SpeedTestEngine] to [Ndt7SpeedTestEngine] — the real M-Lab NDT7 implementation.
  *
- * PLACEHOLDER — when a real engine (NDT7, Ookla, etc.) is ready, swap
- * [PlaceholderSpeedTestEngine] for the real implementation here.
+ * To switch engine (e.g. for testing): replace [Ndt7SpeedTestEngine] here.
  * No other production code needs to change.
  */
 @Module
@@ -21,5 +20,5 @@ abstract class EngineModule {
 
     @Binds
     @Singleton
-    abstract fun bindSpeedTestEngine(impl: PlaceholderSpeedTestEngine): SpeedTestEngine
+    abstract fun bindSpeedTestEngine(impl: Ndt7SpeedTestEngine): SpeedTestEngine
 }

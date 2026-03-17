@@ -71,7 +71,7 @@ class SampleAssembler @Inject constructor(
             carrierName = signal.carrierName,
             networkType = signal.networkType,
 
-            // Signal metrics
+            // Universal signal metrics
             rsrp = signal.rsrp,
             rsrq = signal.rsrq,
             rssi = signal.rssi,
@@ -79,16 +79,42 @@ class SampleAssembler @Inject constructor(
             signalBars = signal.signalBars,
             signalTier = signal.signalTier,
 
+            // 2G-specific RF
+            gsmBer       = signal.gsmBer,
+            gsmTimingAdv = signal.gsmTimingAdv,
+
+            // 3G-specific RF
+            umtsRscp = signal.umtsRscp,
+            umtsEcNo = signal.umtsEcNo,
+
+            // 4G-specific RF
+            lteCqi       = signal.lteCqi,
+            lteTimingAdv = signal.lteTimingAdv,
+
+            // 5G-specific RF (CSI metrics)
+            nrCsiRsrp = signal.nrCsiRsrp,
+            nrCsiRsrq = signal.nrCsiRsrq,
+            nrCsiSinr = signal.nrCsiSinr,
+
             // Speed test fields — null for passive samples (no speed test performed)
             downloadSpeedMbps = null,
-            uploadSpeedMbps = null,
-            latencyMs = null,
-            jitterMs = null,
-            bytesDownloaded = null,
-            bytesUploaded = null,
-            testDurationSec = null,
-            testServerName = null,
+            uploadSpeedMbps   = null,
+            latencyMs         = null,
+            jitterMs          = null,
+            bytesDownloaded   = null,
+            bytesUploaded     = null,
+            testDurationSec   = null,
+            testServerName    = null,
             testServerLocation = null,
+
+            // NDT7 extended metrics — null for passive samples
+            minRttUs        = null,
+            meanRttUs       = null,
+            rttVarUs        = null,
+            retransmitRate  = null,
+            bbrBandwidthBps = null,
+            bbrMinRttUs     = null,
+            serverUuid      = null,
 
             // Collection context
             sampleType = "PASSIVE",

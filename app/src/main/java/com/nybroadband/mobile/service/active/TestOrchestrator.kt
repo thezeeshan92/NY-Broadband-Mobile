@@ -18,13 +18,13 @@ import com.nybroadband.mobile.service.location.LocationReader
 import com.nybroadband.mobile.service.signal.SignalReader
 import com.nybroadband.mobile.service.signal.SignalSnapshot
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
@@ -33,11 +33,12 @@ import javax.inject.Singleton
 /**
  * Coordinates a full active test run end-to-end.
  *
- * Responsibilities (REAL logic):
- *   1. Snapshot the current signal state at the moment the test starts.
+ * Responsibilities:
+ *   1. Snapshot the current signal state at the moment the test starts (pre-test baseline).
  *   2. Start a location fix request in parallel while the engine runs.
- *   3. Drive [SpeedTestEngine.execute] and forward [EngineProgress] as Running states.
- *   4. On [EngineComplete]: build [MeasurementEntity], persist to Room, enqueue for sync.
+ *   3. Drive [SpeedTestEngine.execute] and forward [EngineProgress] as [ActiveTestState.Running].
+ *   4. On [EngineComplete]: build [MeasurementEntity] (including full RF + NDT7 fields),
+ *      persist to Room, enqueue for sync.
  *   5. Emit [ActiveTestState.Completed] with the saved measurement's Room ID.
  *   6. Catch any exception and emit [ActiveTestState.Failed].
  *
@@ -71,12 +72,12 @@ class TestOrchestrator @Inject constructor(
      * Cancelling the flow cancels the test; no result is saved.
      */
     fun run(config: TestConfig): Flow<ActiveTestState> = flow {
-        // Capture signal before the test loads the radio (more accurate baseline)
+        // Capture signal before the test loads the radio (more accurate pre-test baseline)
         val initialSignal: SignalSnapshot? = signalReader.snapshot.value
 
         var rawResult: RawTestResult? = null
 
-        // Begin location fetch in parallel — it overlaps with the latency phase
+        // Begin location fetch in parallel — it overlaps with the latency/download phase
         coroutineScope {
             val locationDeferred = async { locationReader.getLocation(timeoutMs = 8_000L) }
 
@@ -85,35 +86,36 @@ class TestOrchestrator @Inject constructor(
                     is EngineProgress -> emit(update.state)
                     is EngineComplete -> {
                         rawResult = update.result
-                        // Await the location that was requested at test start
                         val location = locationDeferred.await()
 
                         val measurement = buildMeasurementEntity(
-                            raw     = update.result,
-                            signal  = initialSignal,
-                            lat     = location?.latitude,
-                            lon     = location?.longitude,
+                            raw      = update.result,
+                            signal   = initialSignal,
+                            lat      = location?.latitude,
+                            lon      = location?.longitude,
                             accuracy = location?.accuracy,
-                            config  = config
+                            config   = config
                         )
 
-                        // ── REAL: persist to Room ──────────────────────────────────────
+                        // Persist to Room
                         measurementDao.insert(measurement)
 
-                        // ── REAL: enqueue for SyncWorker ──────────────────────────────
+                        // Enqueue for SyncWorker
                         syncQueueDao.enqueue(
                             SyncQueueEntity(
                                 entityType    = SyncRepository.ENTITY_MEASUREMENT,
                                 entityId      = measurement.id,
                                 createdAtMs   = measurement.timestamp,
-                                nextAttemptMs = measurement.timestamp  // eligible immediately
+                                nextAttemptMs = measurement.timestamp
                             )
                         )
 
-                        Timber.d(
+                        Timber.i(
                             "TestOrchestrator: saved ${measurement.id} " +
                             "↓${update.result.downloadMbps.fmt()} " +
-                            "↑${update.result.uploadMbps.fmt()} Mbps"
+                            "↑${update.result.uploadMbps.fmt()} Mbps  " +
+                            "rtt=${update.result.latencyMs}ms  " +
+                            "loss=${update.result.retransmitRate?.let { "%.2f%%".format(it * 100) } ?: "n/a"}"
                         )
 
                         emit(
@@ -136,7 +138,6 @@ class TestOrchestrator @Inject constructor(
         }
 
         if (rawResult == null) {
-            // Engine completed without emitting EngineComplete — treat as failure
             emit(ActiveTestState.Failed(FailureReason.UNKNOWN, "Engine exited without result"))
         }
     }
@@ -146,20 +147,20 @@ class TestOrchestrator @Inject constructor(
         }
         .flowOn(Dispatchers.IO)
 
-    // ── Entity builder (REAL logic) ───────────────────────────────────────────
+    // ── Entity builder ────────────────────────────────────────────────────────
 
     private fun buildMeasurementEntity(
-        raw: RawTestResult,
-        signal: SignalSnapshot?,
-        lat: Double?,
-        lon: Double?,
+        raw:      RawTestResult,
+        signal:   SignalSnapshot?,
+        lat:      Double?,
+        lon:      Double?,
         accuracy: Float?,
-        config: TestConfig
+        config:   TestConfig
     ): MeasurementEntity = MeasurementEntity(
         id                  = UUID.randomUUID().toString(),
         timestamp           = System.currentTimeMillis(),
 
-        // Location — fallback to 0.0 if GPS timed out (gpsAccuracyMeters = 999 flags this)
+        // Location — fallback to 0.0 if GPS timed out (gpsAccuracyMeters=999 flags this)
         lat                 = lat ?: 0.0,
         lon                 = lon ?: 0.0,
         gpsAccuracyMeters   = accuracy ?: 999f,
@@ -170,7 +171,7 @@ class TestOrchestrator @Inject constructor(
         carrierName         = signal?.carrierName,
         networkType         = signal?.networkType ?: "UNKNOWN",
 
-        // Signal metrics
+        // ── Universal signal metrics ──────────────────────────────────────────
         rsrp                = signal?.rsrp,
         rsrq                = signal?.rsrq,
         rssi                = signal?.rssi,
@@ -178,7 +179,24 @@ class TestOrchestrator @Inject constructor(
         signalBars          = signal?.signalBars ?: 0,
         signalTier          = signal?.signalTier ?: "NONE",
 
-        // Speed test results (REAL values from engine, PLACEHOLDER values when engine is stubbed)
+        // ── 2G-specific RF ────────────────────────────────────────────────────
+        gsmBer              = signal?.gsmBer,
+        gsmTimingAdv        = signal?.gsmTimingAdv,
+
+        // ── 3G-specific RF ────────────────────────────────────────────────────
+        umtsRscp            = signal?.umtsRscp,
+        umtsEcNo            = signal?.umtsEcNo,
+
+        // ── 4G-specific RF ────────────────────────────────────────────────────
+        lteCqi              = signal?.lteCqi,
+        lteTimingAdv        = signal?.lteTimingAdv,
+
+        // ── 5G-specific RF (CSI metrics) ─────────────────────────────────────
+        nrCsiRsrp           = signal?.nrCsiRsrp,
+        nrCsiRsrq           = signal?.nrCsiRsrq,
+        nrCsiSinr           = signal?.nrCsiSinr,
+
+        // ── Speed test throughput ─────────────────────────────────────────────
         downloadSpeedMbps   = raw.downloadMbps,
         uploadSpeedMbps     = raw.uploadMbps,
         latencyMs           = raw.latencyMs,
@@ -189,7 +207,16 @@ class TestOrchestrator @Inject constructor(
         testServerName      = raw.serverName,
         testServerLocation  = raw.serverLocation,
 
-        // Collection context
+        // ── NDT7 TCP/BBR extended metrics ─────────────────────────────────────
+        minRttUs            = raw.minRttUs,
+        meanRttUs           = raw.meanRttUs,
+        rttVarUs            = raw.rttVarUs,
+        retransmitRate      = raw.retransmitRate,
+        bbrBandwidthBps     = raw.bbrBandwidthBps,
+        bbrMinRttUs         = raw.bbrMinRttUs,
+        serverUuid          = raw.serverUuid,
+
+        // ── Collection context ────────────────────────────────────────────────
         sampleType          = config.testType,
         activityMode        = null,
         sessionId           = config.sessionId,
@@ -197,12 +224,12 @@ class TestOrchestrator @Inject constructor(
         deadZoneType        = null,
         deadZoneNote        = null,
 
-        // Device metadata
+        // ── Device metadata ───────────────────────────────────────────────────
         deviceModel         = Build.MODEL,
         androidVersion      = Build.VERSION.SDK_INT,
         appVersion          = appVersion,
 
-        // Sync state
+        // ── Sync state ────────────────────────────────────────────────────────
         uploadStatus        = "PENDING",
         uploadAttempts      = 0,
         uploadedAt          = null

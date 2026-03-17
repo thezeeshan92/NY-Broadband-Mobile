@@ -23,7 +23,7 @@ import com.nybroadband.mobile.data.local.db.entity.SyncQueueEntity
         ServerDefinitionEntity::class,
         RemoteConfigCacheEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -125,6 +125,43 @@ abstract class AppDatabase : RoomDatabase() {
                         PRIMARY KEY(`key`)
                     )
                 """.trimIndent())
+            }
+        }
+
+        /**
+         * v2 → v3: Add per-technology RF columns and NDT7 TCP/BBR metrics to the
+         * measurements table.
+         *
+         * All new columns are nullable (no DEFAULT clause required in SQLite for
+         * nullable — existing rows receive NULL automatically).
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // ── 2G RF ─────────────────────────────────────────────────────
+                db.execSQL("ALTER TABLE measurements ADD COLUMN gsmBer INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN gsmTimingAdv INTEGER")
+
+                // ── 3G RF ─────────────────────────────────────────────────────
+                db.execSQL("ALTER TABLE measurements ADD COLUMN umtsRscp INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN umtsEcNo INTEGER")
+
+                // ── 4G RF ─────────────────────────────────────────────────────
+                db.execSQL("ALTER TABLE measurements ADD COLUMN lteCqi INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN lteTimingAdv INTEGER")
+
+                // ── 5G RF (CSI metrics) ───────────────────────────────────────
+                db.execSQL("ALTER TABLE measurements ADD COLUMN nrCsiRsrp INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN nrCsiRsrq INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN nrCsiSinr INTEGER")
+
+                // ── NDT7 TCP/BBR extended metrics ─────────────────────────────
+                db.execSQL("ALTER TABLE measurements ADD COLUMN minRttUs INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN meanRttUs INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN rttVarUs INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN retransmitRate REAL")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN bbrBandwidthBps INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN bbrMinRttUs INTEGER")
+                db.execSQL("ALTER TABLE measurements ADD COLUMN serverUuid TEXT")
             }
         }
     }

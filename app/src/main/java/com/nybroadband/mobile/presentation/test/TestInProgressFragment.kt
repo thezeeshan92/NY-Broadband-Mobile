@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.nybroadband.mobile.R
 import com.nybroadband.mobile.databinding.FragmentTestInProgressBinding
 import com.nybroadband.mobile.domain.model.ActiveTestState
@@ -119,8 +120,14 @@ class TestInProgressFragment : Fragment() {
                                     R.id.action_testInProgress_to_testResult,
                                     bundleOf("measurementId" to event.measurementId)
                                 )
-                            TestInProgressEvent.NavigateBack ->
+                            is TestInProgressEvent.NavigateBack -> {
+                                // Show error snackbar on the parent (ManualTestFragment)
+                                // after popping back to it, so the message is visible.
+                                event.errorMessage?.let { msg ->
+                                    Snackbar.make(requireActivity().window.decorView, msg, Snackbar.LENGTH_LONG).show()
+                                }
                                 findNavController().navigateUp()
+                            }
                         }
                     }
                 }

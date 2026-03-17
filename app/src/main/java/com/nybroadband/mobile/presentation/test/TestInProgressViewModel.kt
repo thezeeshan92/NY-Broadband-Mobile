@@ -9,6 +9,7 @@ import com.nybroadband.mobile.service.active.TestOrchestrator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,8 +25,11 @@ sealed interface TestInProgressEvent {
     /** Navigate to TestResultFragment with this Room measurement ID. */
     data class NavigateToResult(val measurementId: String) : TestInProgressEvent
 
-    /** Navigate back (user cancelled or test failed before any result). */
-    data object NavigateBack : TestInProgressEvent
+    /**
+     * Navigate back (user cancelled or test failed before any result).
+     * [errorMessage] is non-null when the test failed with a known error, null on user cancel.
+     */
+    data class NavigateBack(val errorMessage: String? = null) : TestInProgressEvent
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,8 +78,21 @@ class TestInProgressViewModel @Inject constructor(
                     is ActiveTestState.Completed ->
                         _events.send(TestInProgressEvent.NavigateToResult(state.measurementId))
 
-                    is ActiveTestState.Failed ->
-                        _events.send(TestInProgressEvent.NavigateBack)
+                    is ActiveTestState.Failed -> {
+                        // Brief pause so the "Failed" state is visible before we leave
+                        delay(1_500)
+                        val msg = when (state.reason) {
+                            FailureReason.NO_NETWORK         -> "No network connection"
+                            FailureReason.SERVER_UNREACHABLE -> "Could not reach test server"
+                            FailureReason.TIMEOUT            -> "Test timed out"
+                            FailureReason.PERMISSION_DENIED  -> "Location permission required"
+                            FailureReason.CANCELLED          -> null
+                            FailureReason.UNKNOWN            -> state.message
+                                ?.let { "Test failed: $it" }
+                                ?: "Test failed — please try again"
+                        }
+                        _events.send(TestInProgressEvent.NavigateBack(msg))
+                    }
 
                     else -> { /* Running / Idle — no nav event needed */ }
                 }
@@ -93,7 +110,7 @@ class TestInProgressViewModel @Inject constructor(
         testJob?.cancel()
         _state.value = ActiveTestState.Failed(FailureReason.CANCELLED, "Test cancelled")
         viewModelScope.launch {
-            _events.send(TestInProgressEvent.NavigateBack)
+            _events.send(TestInProgressEvent.NavigateBack(null))
         }
     }
 
