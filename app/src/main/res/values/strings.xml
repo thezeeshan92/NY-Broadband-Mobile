@@ -298,6 +298,13 @@
     <string name="test_speed_unit_mbps">Mbps</string>
     <string name="test_speed_unit_latency">ms  Latency</string>
     <string name="test_latency_fmt">%d ms</string>
+    <!-- Live metric card labels -->
+    <string name="test_metric_download">Mbps  ↓ Download</string>
+    <string name="test_metric_upload">Mbps  ↑ Upload</string>
+    <string name="test_metric_latency">ms  Ping</string>
+    <string name="test_metric_packet_loss">%  Packet Loss</string>
+    <!-- Packet loss format: "0.12 %" -->
+    <string name="test_packet_loss_fmt">%.2f%%</string>
 
     <!-- Cancel confirmation dialog -->
     <string name="test_cancel_title">Cancel test?</string>

@@ -182,7 +182,7 @@ class TestInProgressFragment : Fragment() {
                                            state.phase == TestPhase.UPLOAD
         binding.dotUpload.isActivated   = state.phase == TestPhase.UPLOAD
 
-        // Speed number — show current reading for the active phase
+        // Big speed number — show the active phase metric
         val speed = when (state.phase) {
             TestPhase.LATENCY  -> null
             TestPhase.DOWNLOAD -> state.downloadMbps
@@ -195,11 +195,23 @@ class TestInProgressFragment : Fragment() {
             getString(R.string.test_speed_unit_latency)
         }
 
-        // Latency chip — only shown after LATENCY phase
-        binding.tvLatency.isVisible = state.latencyMs != null
-        state.latencyMs?.let {
-            binding.tvLatency.text = getString(R.string.test_latency_fmt, it)
-        }
+        // ── Metric cards (always visible, updated as values arrive) ──────────
+
+        // Download card
+        binding.tvDownloadResult.text = state.downloadMbps
+            ?.let { "%.1f".format(it) } ?: "--"
+
+        // Upload card
+        binding.tvUploadResult.text = state.uploadMbps
+            ?.let { "%.1f".format(it) } ?: "--"
+
+        // Latency (ping) card
+        binding.tvLatency.text = state.latencyMs
+            ?.let { getString(R.string.test_latency_fmt, it) } ?: "--"
+
+        // Packet loss card — shown as a percentage; "--" until TCP data arrives
+        binding.tvPacketLoss.text = state.retransmitRate
+            ?.let { getString(R.string.test_packet_loss_fmt, it * 100.0) } ?: "--"
 
         // Progress bar
         binding.progressBar.isIndeterminate = state.phase == TestPhase.LATENCY

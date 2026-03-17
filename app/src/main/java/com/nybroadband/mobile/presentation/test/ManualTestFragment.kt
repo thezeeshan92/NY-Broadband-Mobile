@@ -109,9 +109,12 @@ class ManualTestFragment : Fragment() {
                 launch {
                     viewModel.currentSignal.collect { snapshot ->
                         if (snapshot != null && !snapshot.isNoService) {
-                            binding.tvSignalTier.text    = snapshot.signalTier
+                            val tier = snapshot.signalTier
                                 .lowercase().replaceFirstChar { it.uppercase() }
-                            binding.tvSignalNetwork.text = snapshot.networkType
+                            val dbm = snapshot.rsrp ?: snapshot.rssi
+                            binding.tvSignalTier.text = if (dbm != null) "$tier  •  $dbm dBm" else tier
+                            val carrier = snapshot.carrierName?.let { " ($it)" } ?: ""
+                            binding.tvSignalNetwork.text = "${snapshot.networkType}$carrier"
                         } else {
                             binding.tvSignalTier.text    = getString(R.string.signal_unknown)
                             binding.tvSignalNetwork.text = getString(R.string.signal_unknown)

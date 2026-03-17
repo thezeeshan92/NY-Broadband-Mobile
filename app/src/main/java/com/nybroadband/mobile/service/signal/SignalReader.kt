@@ -67,10 +67,18 @@ class SignalReader @Inject constructor(
     @Suppress("DEPRECATION")
     private var legacyListener: LegacyPhoneStateListener? = null
 
+    /** Reference count: incremented by each caller of [start], decremented by [stop]. */
+    private var startCount = 0
+
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
     @SuppressLint("MissingPermission")
     fun start() {
+        startCount++
+        if (startCount > 1) {
+            Timber.d("SignalReader: already running (refCount=$startCount), skipping re-register")
+            return
+        }
         Timber.d("SignalReader: start (API ${Build.VERSION.SDK_INT})")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             startModern()
@@ -80,6 +88,11 @@ class SignalReader @Inject constructor(
     }
 
     fun stop() {
+        startCount = maxOf(0, startCount - 1)
+        if (startCount > 0) {
+            Timber.d("SignalReader: stop called but still in use (refCount=$startCount)")
+            return
+        }
         Timber.d("SignalReader: stop")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             modernCallback?.let {

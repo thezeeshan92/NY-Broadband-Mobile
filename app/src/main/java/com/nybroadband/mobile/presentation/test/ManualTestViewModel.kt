@@ -43,6 +43,15 @@ class ManualTestViewModel @Inject constructor(
 
     init {
         loadServer()
+        // The passive collection service may not be running when the user opens
+        // this screen, so start the reader here to ensure live signal data.
+        // SignalReader is ref-counted, so this pairs safely with the service's own start/stop.
+        signalReader.start()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        signalReader.stop()
     }
 
     fun setDuration(seconds: Int) {

@@ -34,7 +34,9 @@ sealed interface ActiveTestState {
         val downloadMbps: Double?                   = null,
         val uploadMbps: Double?                     = null,
         val downloadSamples: List<SpeedSample>      = emptyList(),
-        val uploadSamples: List<SpeedSample>        = emptyList()
+        val uploadSamples: List<SpeedSample>        = emptyList(),
+        /** Live retransmit rate (BytesRetrans / BytesSent) as a packet-loss proxy; 0.0–1.0. */
+        val retransmitRate: Double?                 = null
     ) : ActiveTestState
 
     /**
