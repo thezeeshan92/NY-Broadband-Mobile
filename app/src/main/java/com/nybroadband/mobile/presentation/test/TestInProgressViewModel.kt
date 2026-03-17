@@ -82,14 +82,17 @@ class TestInProgressViewModel @Inject constructor(
                         // Brief pause so the "Failed" state is visible before we leave
                         delay(1_500)
                         val msg = when (state.reason) {
-                            FailureReason.NO_NETWORK         -> "No network connection"
-                            FailureReason.SERVER_UNREACHABLE -> "Could not reach test server"
-                            FailureReason.TIMEOUT            -> "Test timed out"
-                            FailureReason.PERMISSION_DENIED  -> "Location permission required"
+                            FailureReason.NO_NETWORK         ->
+                                "No internet connection — check your network and try again"
+                            FailureReason.SERVER_UNREACHABLE ->
+                                "Could not reach the test server — try again in a moment"
+                            FailureReason.TIMEOUT            ->
+                                "Test timed out — your connection may be too slow or unstable"
+                            FailureReason.PERMISSION_DENIED  ->
+                                "Location permission is required to run a test"
                             FailureReason.CANCELLED          -> null
-                            FailureReason.UNKNOWN            -> state.message
-                                ?.let { "Test failed: $it" }
-                                ?: "Test failed — please try again"
+                            FailureReason.UNKNOWN            ->
+                                "Speed test failed — please try again"
                         }
                         _events.send(TestInProgressEvent.NavigateBack(msg))
                     }

@@ -26,6 +26,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -143,7 +146,15 @@ class TestOrchestrator @Inject constructor(
     }
         .catch { e ->
             Timber.w(e, "TestOrchestrator: test failed")
-            emit(ActiveTestState.Failed(FailureReason.UNKNOWN, e.message))
+            // Map common network exceptions to typed FailureReasons so the UI
+            // can show actionable messages instead of raw exception text.
+            val reason = when (e) {
+                is UnknownHostException  -> FailureReason.NO_NETWORK
+                is ConnectException      -> FailureReason.SERVER_UNREACHABLE
+                is SocketTimeoutException -> FailureReason.TIMEOUT
+                else                     -> FailureReason.UNKNOWN
+            }
+            emit(ActiveTestState.Failed(reason, e.message))
         }
         .flowOn(Dispatchers.IO)
 

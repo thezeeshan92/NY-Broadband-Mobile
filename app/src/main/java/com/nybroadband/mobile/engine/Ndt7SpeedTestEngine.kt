@@ -29,6 +29,7 @@ import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import timber.log.Timber
 import java.io.IOException
+import java.net.UnknownHostException
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.random.Random
@@ -130,13 +131,15 @@ class Ndt7SpeedTestEngine @Inject constructor(
     private val measurementAdapter by lazy { moshi.adapter(Ndt7Measurement::class.java) }
 
     companion object {
-        private const val LOCATE_URL      = "https://locate.measurementlab.net/v2/nearest/ndt/ndt7"
-        private const val NDT7_PROTOCOL   = "net.measurementlab.ndt.v7"
-        private const val DL_KEY          = "wss:///ndt/v7/download"
-        private const val UL_KEY          = "wss:///ndt/v7/upload"
-        private const val UPLOAD_CHUNK    = 32_768                  // 32 KB per WebSocket frame
+        private const val LOCATE_URL       = "https://locate.measurementlab.net/v2/nearest/ndt/ndt7"
+        private const val NDT7_PROTOCOL    = "net.measurementlab.ndt.v7"
+        private const val DL_KEY           = "wss:///ndt/v7/download"
+        private const val UL_KEY           = "wss:///ndt/v7/upload"
+        private const val UPLOAD_CHUNK     = 32_768                 // 32 KB per WebSocket frame
         private const val LATENCY_PHASE_MS = 1_500L                 // show LATENCY UI for first 1.5 s
         private const val US_PER_MS        = 1_000L
+        private const val LOCATE_RETRIES   = 3                      // attempts before giving up
+        private const val LOCATE_RETRY_DELAY_MS = 2_000L            // wait between retries
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -371,17 +374,41 @@ class Ndt7SpeedTestEngine @Inject constructor(
 
     // ── Server discovery ──────────────────────────────────────────────────────
 
-    private fun locateServer(): Ndt7Server {
-        val request  = Request.Builder().url(LOCATE_URL).build()
-        val response = okHttpClient.newCall(request).execute()
-        response.use { r ->
-            if (!r.isSuccessful) throw IOException("NDT7 locate failed: HTTP ${r.code}")
-            val body = r.body?.string() ?: throw IOException("NDT7 locate: empty response")
-            val parsed = locateAdapter.fromJson(body)
-                ?: throw IOException("NDT7 locate: could not parse response")
-            return parsed.results.firstOrNull()
-                ?: throw IOException("NDT7 locate: no servers available")
+    /**
+     * Finds the nearest NDT7 server via the M-Lab Locate v2 API.
+     *
+     * Retries up to [LOCATE_RETRIES] times with a [LOCATE_RETRY_DELAY_MS] pause between
+     * attempts to handle transient DNS failures (UnknownHostException) or flaky
+     * connectivity at test start time.
+     *
+     * Throws the last exception if all attempts fail.
+     */
+    private suspend fun locateServer(): Ndt7Server {
+        var lastException: Exception? = null
+        repeat(LOCATE_RETRIES) { attempt ->
+            try {
+                val request  = Request.Builder().url(LOCATE_URL).build()
+                val response = okHttpClient.newCall(request).execute()
+                response.use { r ->
+                    if (!r.isSuccessful) throw IOException("NDT7 locate failed: HTTP ${r.code}")
+                    val body = r.body?.string()
+                        ?: throw IOException("NDT7 locate: empty response body")
+                    val parsed = locateAdapter.fromJson(body)
+                        ?: throw IOException("NDT7 locate: could not parse response")
+                    return parsed.results.firstOrNull()
+                        ?: throw IOException("NDT7 locate: no servers returned")
+                }
+            } catch (e: UnknownHostException) {
+                lastException = e
+                Timber.w("NDT7 locate attempt ${attempt + 1}/$LOCATE_RETRIES failed (DNS): ${e.message}")
+                if (attempt < LOCATE_RETRIES - 1) delay(LOCATE_RETRY_DELAY_MS)
+            } catch (e: IOException) {
+                lastException = e
+                Timber.w("NDT7 locate attempt ${attempt + 1}/$LOCATE_RETRIES failed: ${e.message}")
+                if (attempt < LOCATE_RETRIES - 1) delay(LOCATE_RETRY_DELAY_MS)
+            }
         }
+        throw lastException ?: IOException("NDT7 locate: all $LOCATE_RETRIES attempts failed")
     }
 
     // ── Download WebSocket ────────────────────────────────────────────────────
