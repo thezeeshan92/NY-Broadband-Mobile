@@ -13,6 +13,7 @@
     <!-- Bottom navigation -->
     <string name="nav_map">Coverage Map</string>
     <string name="nav_results">My Results</string>
+    <string name="nav_cellular">Cellular</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Home screen -->
@@ -364,6 +365,50 @@
     <string name="result_adv_device">Device</string>
     <string name="result_adv_app_version">App version</string>
     <string name="result_adv_session_id">Session ID</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         CELLULAR INFO SCREEN
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Screen header / toolbar -->
+    <string name="cellular_help">Cellular info help</string>
+    <string name="cellular_settings">Cellular settings</string>
+
+    <!-- Section titles -->
+    <string name="cellular_section_connection">Connection</string>
+    <string name="cellular_section_cells">Cell Towers</string>
+
+    <!-- Empty / loading states -->
+    <string name="cellular_scanning">Scanning for cell towers…</string>
+    <string name="cellular_no_cells">No cell towers found.\nGrant phone-state permission and try again.</string>
+
+    <!-- Connection info labels -->
+    <string name="cellular_conn_carrier">Carrier</string>
+    <string name="cellular_conn_gen">Gen</string>
+    <string name="cellular_conn_network">Network</string>
+    <string name="cellular_conn_tech">Tech</string>
+    <string name="cellular_conn_roaming">Roaming</string>
+    <string name="cellular_conn_plmn">PLMN</string>
+    <string name="cellular_roaming_true">Yes</string>
+    <string name="cellular_roaming_false">No</string>
+
+    <!-- Signal dBm format: "-96 dBm" -->
+    <string name="cellular_dbm_fmt">%d dBm</string>
+
+    <!-- Settings bottom sheet -->
+    <string name="cellular_settings_title">Cellular Info Settings</string>
+    <string name="cellular_setting_advanced_view">Advanced View</string>
+    <string name="cellular_setting_hide_neighbors">Hide Neighbor Cells</string>
+    <string name="cellular_setting_refresh_freq">Refresh Frequency</string>
+    <!-- format: "7 Seconds" -->
+    <string name="cellular_setting_refresh_seconds_fmt">%d Seconds</string>
+
+    <!-- Help dialog -->
+    <string name="cellular_help_title">About Cellular Info</string>
+    <string name="cellular_help_message">This screen shows live cell tower data reported by your device.\n\n• RSRP — Reference Signal Received Power (LTE signal strength)\n• RSRQ — Reference Signal Received Quality\n• SNR — Signal-to-Noise Ratio\n• PCI — Physical Cell Identifier\n• eNb — eNodeB (base station) identifier\n• CID — Cell ID within the eNodeB\n• BW — Channel bandwidth\n\nValues update every few seconds based on your refresh setting.</string>
+
+    <!-- Generic close action -->
+    <string name="action_close">Close</string>
 
     <!-- Content descriptions (accessibility) -->
     <string name="cd_signal_dot">Signal quality indicator</string>

@@ -113,7 +113,14 @@
             app:argType="string" />
     </fragment>
 
-    <!-- ===== Tab 2: My Results ===== -->
+    <!-- ===== Tab 2: Cellular Info ===== -->
+    <fragment
+        android:id="@+id/cellularFragment"
+        android:name="com.nybroadband.mobile.presentation.cellular.CellularFragment"
+        android:label="Cellular"
+        tools:layout="@layout/fragment_cellular" />
+
+    <!-- ===== Tab 3: My Results ===== -->
     <fragment
         android:id="@+id/resultsFragment"
         android:name="com.nybroadband.mobile.presentation.results.ResultsFragment"

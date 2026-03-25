@@ -17,6 +17,11 @@
         android:title="@string/nav_results" />
 
     <item
+        android:id="@+id/cellularFragment"
+        android:icon="@drawable/ic_cellular"
+        android:title="@string/nav_cellular" />
+
+    <item
         android:id="@+id/settingsFragment"
         android:icon="@drawable/ic_settings"
         android:title="@string/nav_settings" />
