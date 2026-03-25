@@ -371,6 +371,7 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- Screen header / toolbar -->
+    <string name="cellular_app_branding">NY Broadband Mobile</string>
     <string name="cellular_help">Cellular info help</string>
     <string name="cellular_settings">Cellular settings</string>
 
@@ -381,6 +382,7 @@
     <!-- Empty / loading states -->
     <string name="cellular_scanning">Scanning for cell towers…</string>
     <string name="cellular_no_cells">No cell towers found.\nGrant phone-state permission and try again.</string>
+    <string name="cellular_value_placeholder">—</string>
 
     <!-- Connection info labels -->
     <string name="cellular_conn_carrier">Carrier</string>
@@ -389,6 +391,8 @@
     <string name="cellular_conn_tech">Tech</string>
     <string name="cellular_conn_roaming">Roaming</string>
     <string name="cellular_conn_plmn">PLMN</string>
+    <string name="cellular_conn_ip_transit">IP Transit</string>
+    <string name="cellular_conn_asn">ASN</string>
     <string name="cellular_roaming_true">Yes</string>
     <string name="cellular_roaming_false">No</string>
 

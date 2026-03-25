@@ -9,7 +9,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="?attr/colorSurface">
+    android:background="@color/cellular_surface">
 
     <!-- Drag handle -->
     <View
@@ -36,7 +36,7 @@
             android:text="@string/cellular_settings_title"
             android:textSize="@dimen/text_headline_medium"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/cellular_text_primary" />
 
         <ImageButton
             android:id="@+id/btnClose"
@@ -44,7 +44,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            android:tint="?attr/colorOnSurfaceVariant"
+            android:tint="@color/cellular_text_label"
             android:contentDescription="@string/action_close" />
 
     </LinearLayout>
@@ -55,7 +55,7 @@
         android:layout_height="1dp"
         android:layout_marginStart="@dimen/screen_margin"
         android:layout_marginEnd="@dimen/screen_margin"
-        android:background="?attr/colorOutlineVariant" />
+        android:background="@color/cellular_divider" />
 
     <!-- ── Advanced View toggle ──────────────────────────────────────────── -->
     <LinearLayout
@@ -72,7 +72,7 @@
             android:layout_weight="1"
             android:text="@string/cellular_setting_advanced_view"
             android:textSize="@dimen/text_body"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/cellular_text_primary" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchAdvancedView"
@@ -88,7 +88,7 @@
         android:layout_height="1dp"
         android:layout_marginStart="@dimen/screen_margin"
         android:layout_marginEnd="@dimen/screen_margin"
-        android:background="?attr/colorOutlineVariant" />
+        android:background="@color/cellular_divider" />
 
     <!-- ── Hide Neighbor Cells toggle ───────────────────────────────────── -->
     <LinearLayout
@@ -105,7 +105,7 @@
             android:layout_weight="1"
             android:text="@string/cellular_setting_hide_neighbors"
             android:textSize="@dimen/text_body"
-            android:textColor="?attr/colorOnSurface" />
+            android:textColor="@color/cellular_text_primary" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchHideNeighbors"
@@ -121,7 +121,7 @@
         android:layout_height="1dp"
         android:layout_marginStart="@dimen/screen_margin"
         android:layout_marginEnd="@dimen/screen_margin"
-        android:background="?attr/colorOutlineVariant" />
+        android:background="@color/cellular_divider" />
 
     <!-- ── Refresh Frequency slider ──────────────────────────────────────── -->
     <LinearLayout
@@ -146,7 +146,7 @@
                 android:layout_weight="1"
                 android:text="@string/cellular_setting_refresh_freq"
                 android:textSize="@dimen/text_body"
-                android:textColor="?attr/colorOnSurface" />
+                android:textColor="@color/cellular_text_primary" />
 
             <TextView
                 android:id="@+id/tvRefreshValue"
@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:text="7 Seconds"
                 android:textSize="@dimen/text_body"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/ny_blue_300"
                 android:textStyle="bold" />
 
         </LinearLayout>

@@ -46,4 +46,14 @@
     <color name="drag_handle_dark">#374151</color>
     <color name="selector_nav_icon">#2E7D32</color>
 
+    <!-- Cellular info screen — forced dark theme to match reference design -->
+    <color name="cellular_bg">#141A26</color>           <!-- Page background (dark navy) -->
+    <color name="cellular_surface">#1B2236</color>      <!-- Cell card / section surface -->
+    <color name="cellular_header_bg">#111825</color>    <!-- Top header bar -->
+    <color name="cellular_text_primary">#F0F2F5</color> <!-- Primary value text (near white) -->
+    <color name="cellular_text_label">#8B8FA8</color>   <!-- Label text (dim grey-blue) -->
+    <color name="cellular_divider">#252D41</color>      <!-- Row dividers / separators -->
+    <color name="cellular_badge_primary">#16A34A</color><!-- "P" badge (green) -->
+    <color name="cellular_badge_neighbor">#4B5563</color><!-- "N" badge (grey) -->
+
 </resources>

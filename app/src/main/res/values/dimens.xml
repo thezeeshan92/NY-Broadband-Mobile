@@ -49,4 +49,16 @@
     <dimen name="text_label">12sp</dimen>
     <dimen name="text_caption">11sp</dimen>
     <dimen name="text_metric">28sp</dimen>
+
+    <!-- Cellular screen — compact typography (more rows visible, less scroll) -->
+    <dimen name="cellular_text_branding">11sp</dimen>
+    <dimen name="cellular_text_toolbar_carrier">14sp</dimen>
+    <dimen name="cellular_text_section">14sp</dimen>
+    <dimen name="cellular_text_empty">11sp</dimen>
+    <dimen name="cellular_text_label_sp">10sp</dimen>
+    <dimen name="cellular_text_value_sp">12sp</dimen>
+    <dimen name="cellular_text_band_sp">14sp</dimen>
+    <dimen name="cellular_text_freq_sp">10sp</dimen>
+    <dimen name="cellular_text_dbm_sp">14sp</dimen>
+    <dimen name="cellular_badge_text_sp">10sp</dimen>
 </resources>

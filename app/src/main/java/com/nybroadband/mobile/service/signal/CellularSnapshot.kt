@@ -114,12 +114,12 @@ sealed class CellEntry {
         is Gsm   -> data.band?.let { "${it}M" }
     }
 
-    /** Formatted frequency range like "1805 MHz – 1880 MHz" */
+    /** Formatted frequency range like "1805 MHz - 1880 MHz" (matches reference) */
     val freqRangeLabel: String? get() = when (this) {
         is Lte   -> if (data.freqDlLowMhz != null && data.freqDlHighMhz != null)
-            "${data.freqDlLowMhz} MHz – ${data.freqDlHighMhz} MHz" else null
+            "${data.freqDlLowMhz} MHz - ${data.freqDlHighMhz} MHz" else null
         is Nr    -> if (data.freqLowMhz != null && data.freqHighMhz != null)
-            "${data.freqLowMhz} MHz – ${data.freqHighMhz} MHz" else null
+            "${data.freqLowMhz} MHz - ${data.freqHighMhz} MHz" else null
         is Wcdma -> null
         is Gsm   -> null
     }
