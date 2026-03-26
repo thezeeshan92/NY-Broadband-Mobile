@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/carrier_all"
+        android:title="@string/map_filter_carriers" />
+    <item
+        android:id="@+id/carrier_att"
+        android:title="@string/map_carrier_att" />
+    <item
+        android:id="@+id/carrier_tmo"
+        android:title="@string/map_carrier_tmobile" />
+    <item
+        android:id="@+id/carrier_vzw"
+        android:title="@string/map_carrier_verizon" />
+</menu>

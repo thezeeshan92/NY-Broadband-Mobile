@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/metric_avg"
+        android:title="@string/map_metric_average" />
+    <item
+        android:id="@+id/metric_median"
+        android:title="@string/map_metric_median" />
+    <item
+        android:id="@+id/metric_best"
+        android:title="@string/map_metric_best" />
+</menu>

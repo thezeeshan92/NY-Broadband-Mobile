@@ -9,6 +9,7 @@
 
     <!-- Bottom sheet -->
     <dimen name="bottom_sheet_peek_height">88dp</dimen>
+    <dimen name="grid_cell_sheet_peek_height">300dp</dimen>
     <dimen name="bottom_sheet_corner_radius">16dp</dimen>
 
     <!-- Drag handle -->
@@ -61,4 +62,14 @@
     <dimen name="cellular_text_freq_sp">10sp</dimen>
     <dimen name="cellular_text_dbm_sp">14sp</dimen>
     <dimen name="cellular_badge_text_sp">10sp</dimen>
+
+    <!-- Coverage map chrome -->
+    <dimen name="map_overlay_corner">22dp</dimen>
+    <dimen name="map_overlay_padding">12dp</dimen>
+    <dimen name="map_search_height">44dp</dimen>
+    <dimen name="map_icon_button_size">44dp</dimen>
+    <dimen name="map_filter_chip_height">36dp</dimen>
+    <dimen name="map_layer_card_width">112dp</dimen>
+    <dimen name="map_layer_card_thumb_height">72dp</dimen>
+    <dimen name="map_legend_tab_width">36dp</dimen>
 </resources>

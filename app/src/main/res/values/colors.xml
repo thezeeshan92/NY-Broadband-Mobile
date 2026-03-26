@@ -56,4 +56,18 @@
     <color name="cellular_badge_primary">#16A34A</color><!-- "P" badge (green) -->
     <color name="cellular_badge_neighbor">#4B5563</color><!-- "N" badge (grey) -->
 
+    <!-- Coverage map UI (coveragemap.com–style overlays) -->
+    <color name="map_overlay_bg">#CC1C1C1E</color>
+    <color name="map_overlay_stroke">#33FFFFFF</color>
+    <color name="map_search_field_bg">#F5F5F7</color>
+    <color name="map_search_hint">#8E8E93</color>
+    <color name="map_chip_bg">#3A3A3C</color>
+    <color name="map_chip_stroke">#58FFFFFF</color>
+    <color name="map_filter_sheet_bg">#1C1C1E</color>
+    <color name="map_filter_card">#2C2C2E</color>
+    <color name="map_filter_accent">#007AFF</color>
+    <color name="map_filter_label">#AEAEB2</color>
+    <color name="map_legend_tab_bg">#F2F2F7</color>
+    <color name="map_layer_panel_bg">#E6282830</color>
+
 </resources>

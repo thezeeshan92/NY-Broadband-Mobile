@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -86,6 +88,72 @@ class HomeViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
+
+    /** Toolbar + filter sheet settings; drives [mapPointsForDisplay] with mock data when enabled. */
+    private val _mapFilterState = MutableStateFlow(MapFilterState())
+    val mapFilterState: StateFlow<MapFilterState> = _mapFilterState.asStateFlow()
+
+    /**
+     * Points sent to Mapbox after applying [mapFilterState] (merges mock measurements when [MapMockConfig.ENABLED]).
+     *
+     * Uses [SharingStarted.Lazily] so leaving the map tab does not reset to [emptyList] after the
+     * WhileSubscribed timeout — that was clearing the GeoJSON source while Signal Strength showed no dots.
+     * When mocks are on, [initialValue] matches a zero-DB filter pass so the first read is never empty.
+     */
+    val mapPointsForDisplay: StateFlow<List<MapPointProjection>> = combine(
+        measurementDao.observeMapPoints(),
+        _mapFilterState,
+    ) { real, filters ->
+        MapMockData.combineAndFilter(real, filters)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Lazily,
+        initialValue = if (MapMockConfig.ENABLED) {
+            MapMockData.combineAndFilter(emptyList(), MapFilterState())
+        } else {
+            emptyList()
+        },
+    )
+
+    fun resetMapFilter() {
+        _mapFilterState.value = MapFilterState()
+    }
+
+    fun updateMapFilter(transform: MapFilterState.() -> MapFilterState) {
+        _mapFilterState.update(transform)
+    }
+
+    fun setCarrierFilter(c: MapCarrierFilter) = updateMapFilter { copy(carrier = c) }
+
+    fun setNetworkFilter(n: MapNetworkFilter) = updateMapFilter { copy(network = n) }
+
+    fun setMetricFilter(m: MapMetricFilter) = updateMapFilter { copy(metric = m) }
+
+    fun setCountryFilter(c: MapCountryFilter) = updateMapFilter { copy(country = c) }
+
+    fun setMyDataOnly(v: Boolean) = updateMapFilter { copy(myDataOnly = v) }
+
+    fun setShowMapValues(v: Boolean) = updateMapFilter { copy(showMapValues = v) }
+
+    fun setShowLegend(v: Boolean) = updateMapFilter { copy(showLegend = v) }
+
+    fun setColorMode(m: MapColorMode) = updateMapFilter { copy(colorMode = m) }
+
+    fun setSheetMetricKind(k: MapSheetMetricKind) = updateMapFilter { copy(mapMetricKind = k) }
+
+    fun setSpeedFilters(
+        minDownloadMbps: Int,
+        maxDownloadMbps: Int,
+        minUploadMbps: Int,
+        maxUploadMbps: Int,
+    ) = updateMapFilter {
+        copy(
+            minDownloadMbps = minDownloadMbps,
+            maxDownloadMbps = maxDownloadMbps,
+            minUploadMbps = minUploadMbps,
+            maxUploadMbps = maxUploadMbps,
+        )
+    }
 
     // ── UI state ─────────────────────────────────────────────────────────────
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)

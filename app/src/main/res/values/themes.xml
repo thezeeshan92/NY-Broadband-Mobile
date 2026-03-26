@@ -34,6 +34,12 @@
         <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
+    <!-- Grid cell detail — dark modal sheet over map -->
+    <style name="ThemeOverlay.GridCellBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
     <!-- Splash screen theme — solid brand navy, no action bar -->
     <style name="Theme.NYBroadband.Splash" parent="Theme.NYBroadband">
         <item name="android:windowBackground">@color/ny_blue_900</item>

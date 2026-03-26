@@ -75,7 +75,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingBottom="52dp"
+        android:paddingBottom="65dp"
         android:clipToPadding="true"
         android:background="@color/cellular_bg">
 

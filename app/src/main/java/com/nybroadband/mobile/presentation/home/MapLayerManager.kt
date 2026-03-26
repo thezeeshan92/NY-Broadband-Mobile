@@ -11,8 +11,10 @@ import com.mapbox.maps.extension.style.layers.generated.FillLayer
 import com.mapbox.maps.extension.style.layers.generated.LineLayer
 import com.mapbox.maps.extension.style.layers.generated.circleLayer
 import com.mapbox.maps.extension.style.layers.generated.fillLayer
+import com.mapbox.maps.extension.style.layers.generated.heatmapLayer
 import com.mapbox.maps.extension.style.layers.generated.lineLayer
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
+import com.mapbox.maps.extension.style.layers.properties.generated.Visibility
 import com.mapbox.maps.extension.style.layers.getLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
@@ -86,7 +88,22 @@ import com.nybroadband.mobile.data.local.db.dao.MapPointProjection
  * HomeMapFragment stores the instance in a nullable var and nulls it in
  * onDestroyView() to prevent dangling references to a dead Style.
  */
+enum class MapVisualizationMode {
+    /** Density-weighted heatmap (speed-style view). */
+    SPEED_HEATMAP,
+
+    /** Clustered dots — default signal-strength style. */
+    SIGNAL_DOTS,
+
+    /** Backend hex polygons — coverage report style. */
+    COVERAGE_HEX
+}
+
 class MapLayerManager(private val style: Style) {
+
+    private var visualizationMode: MapVisualizationMode = MapVisualizationMode.SIGNAL_DOTS
+    private var backendHexConnected: Boolean = false
+    private var mockHeatmapGridLoaded: Boolean = false
 
     // ── Source / Layer ID constants ───────────────────────────────────────────
 
@@ -103,6 +120,10 @@ class MapLayerManager(private val style: Style) {
         const val LAYER_HEX_FILL      = "layer_hex_fill_backend"
         const val LAYER_HEX_OUTLINE   = "layer_hex_outline_backend"
 
+        /** CoverageMap-style square grid (mock QA) — sits above heatmap, below clusters. */
+        const val SOURCE_MOCK_GRID    = "source_mock_heatmap_grid"
+        const val LAYER_MOCK_GRID_FILL = "layer_mock_heatmap_grid_fill"
+
         // Clustering parameters
         private const val CLUSTER_MAX_ZOOM  = 13   // above this zoom, show individual dots
         private const val CLUSTER_RADIUS_PX = 50   // merge points within this pixel radius
@@ -113,9 +134,11 @@ class MapLayerManager(private val style: Style) {
     init {
         addBackendSource()      // backend layers sit below local layers
         addLocalSource()        // clustered GeoJSON source
-        // addHeatmapLayer()    // ← uncomment post-MVP to enable density view
+        addHeatmapLayer()       // under clusters/dots; toggled via [setVisualizationMode]
+        addMockHeatmapGridLayerStub()
         addClusterLayers()
         addDotLayer()
+        setVisualizationMode(MapVisualizationMode.SIGNAL_DOTS)
     }
 
     // ── 1. Backend source + hex layers (invisible stubs) ─────────────────────
@@ -256,13 +279,15 @@ class MapLayerManager(private val style: Style) {
             """.trimIndent()
         )
 
-        // Zoom-interpolated radius: small at state level, comfortable for finger taps at street level
+        // Include low zoom stops so dots stay visible at country scale (clusters dominate; dots at high zoom).
         val zoomRadius = Expression.fromRaw(
             """
             ["interpolate", ["linear"], ["zoom"],
-                6,  4,
-                10, 7,
-                14, 10,
+                2,  5,
+                4,  6,
+                6,  8,
+                10, 10,
+                14, 12,
                 18, 14
             ]
             """.trimIndent()
@@ -280,59 +305,144 @@ class MapLayerManager(private val style: Style) {
         )
     }
 
-    // ── 5. Heatmap layer — post-MVP stub ──────────────────────────────────────
+    // ── 5. Heatmap layer (under clusters/dots; shown in SPEED_HEATMAP mode) ───
 
-    /**
-     * HEATMAP ASSESSMENT — RECOMMENDATION: defer to post-MVP.
-     *
-     * WHY NOT MVP:
-     *   • Heatmap communicates density, not signal quality. This app's primary
-     *     goal is showing WHERE coverage is good/bad, not WHERE measurements are dense.
-     *   • With only 500 local Room points, a heatmap adds visual noise with no
-     *     analytical benefit over colored dots.
-     *   • Heatmaps become meaningful at backend scale (millions of crowd-sourced
-     *     points interpolated server-side) — at that point a backend-generated
-     *     raster tile layer may be a better choice than client-side heatmap.
-     *
-     * WHEN TO ADD IT:
-     *   • Add a "View" toggle (density / quality) in the toolbar or bottom sheet.
-     *   • Show heatmap at zoom < 12, switch to colored dots at zoom >= 12.
-     *   • Weight each point by signalTier so the heatmap reflects quality, not count:
-     *     GOOD=1.0, FAIR=0.7, WEAK=0.4, POOR=0.2
-     *
-     * TO ENABLE: uncomment the addHeatmapLayer() call in init{}.
-     */
-    @Suppress("unused")
     private fun addHeatmapLayer() {
-        // Insert BEFORE cluster/dot layers so it appears underneath
         style.addLayer(
-            com.mapbox.maps.extension.style.layers.generated.heatmapLayer(
-                LAYER_HEATMAP, SOURCE_LOCAL
-            ) {
-                // Weight each point by its signal quality (not uniform density)
-                heatmapWeight(Expression.fromRaw(
-                    """
-                    ["match", ["get", "signalTier"],
-                        "GOOD", 1.0,
-                        "FAIR", 0.7,
-                        "WEAK", 0.4,
-                        "POOR", 0.2,
-                        0.1
-                    ]
-                    """.trimIndent()
-                ))
-                heatmapIntensity(Expression.fromRaw(
-                    """["interpolate", ["linear"], ["zoom"], 6, 0.6, 12, 1.4]"""
-                ))
-                heatmapRadius(Expression.fromRaw(
-                    """["interpolate", ["linear"], ["zoom"], 6, 14, 14, 35]"""
-                ))
-                // Fade to zero below dot layer at street level
-                heatmapOpacity(Expression.fromRaw(
-                    """["interpolate", ["linear"], ["zoom"], 11, 0.9, 13, 0.0]"""
-                ))
+            heatmapLayer(LAYER_HEATMAP, SOURCE_LOCAL) {
+                heatmapWeight(
+                    Expression.fromRaw(
+                        """
+                        ["match", ["get", "signalTier"],
+                            "GOOD", 1.0,
+                            "FAIR", 0.7,
+                            "WEAK", 0.4,
+                            "POOR", 0.2,
+                            0.1
+                        ]
+                        """.trimIndent()
+                    )
+                )
+                heatmapIntensity(
+                    Expression.fromRaw(
+                        """["interpolate", ["linear"], ["zoom"], 6, 0.6, 12, 1.4]"""
+                    )
+                )
+                heatmapRadius(
+                    Expression.fromRaw(
+                        """["interpolate", ["linear"], ["zoom"], 4, 28, 6, 48, 10, 55, 14, 40]"""
+                    )
+                )
+                heatmapOpacity(
+                    Expression.fromRaw(
+                        """["interpolate", ["linear"], ["zoom"], 4, 0.85, 10, 0.88, 14, 0.82]"""
+                    )
+                )
             }
         )
+    }
+
+    /**
+     * Square-cell grid layer (initially empty). [loadMockHeatmapGrid] fills GeoJSON for QA.
+     * Rendered between point-heatmap and clusters so it is visible at country zoom.
+     */
+    private fun addMockHeatmapGridLayerStub() {
+        style.addSource(
+            geoJsonSource(SOURCE_MOCK_GRID) {
+                featureCollection(FeatureCollection.fromFeatures(emptyList()))
+            }
+        )
+        val gridFillColor = Expression.fromRaw(
+            """
+            ["interpolate", ["linear"], ["coalesce", ["get", "signalScore"], 0],
+                0.00, "rgba(76,29,149,0.92)",
+                0.35, "rgba(147,51,234,0.88)",
+                0.55, "rgba(168,85,247,0.82)",
+                0.75, "rgba(34,197,94,0.78)",
+                1.00, "rgba(22,163,74,0.82)"
+            ]
+            """.trimIndent()
+        )
+        style.addLayer(
+            fillLayer(LAYER_MOCK_GRID_FILL, SOURCE_MOCK_GRID) {
+                fillColor(gridFillColor)
+                fillOpacity(0.0)
+                fillAntialias(true)
+            }
+        )
+    }
+
+    /** Loads square-grid coverage (CoverageMap-style) for mock heatmap mode. */
+    fun loadMockHeatmapGrid(collection: FeatureCollection) {
+        style.getSourceAs<GeoJsonSource>(SOURCE_MOCK_GRID)?.featureCollection(collection)
+        val feats = collection.features()
+        mockHeatmapGridLoaded = feats != null && feats.isNotEmpty()
+        if (visualizationMode == MapVisualizationMode.SPEED_HEATMAP) {
+            applyMockHeatmapGridVisibilityForCurrentMode()
+        }
+    }
+
+    private fun applyMockHeatmapGridVisibilityForCurrentMode() {
+        val grid = style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer ?: return
+        if (visualizationMode != MapVisualizationMode.SPEED_HEATMAP) {
+            grid.fillOpacity(0.0)
+            return
+        }
+        if (mockHeatmapGridLoaded) {
+            grid.fillOpacity(0.52)
+            setLayerVisibility(LAYER_HEATMAP, false)
+        } else {
+            grid.fillOpacity(0.0)
+            setLayerVisibility(LAYER_HEATMAP, true)
+        }
+    }
+
+    private fun setLayerVisibility(layerId: String, visible: Boolean) {
+        style.getLayer(layerId)?.visibility(
+            if (visible) Visibility.VISIBLE else Visibility.NONE
+        )
+    }
+
+    /**
+     * Switches between CoverageMap-style views: speed heatmap, signal dots, or hex coverage.
+     */
+    fun setVisualizationMode(mode: MapVisualizationMode) {
+        visualizationMode = mode
+        when (mode) {
+            MapVisualizationMode.SPEED_HEATMAP -> {
+                setLayerVisibility(LAYER_CLUSTER_BG, visible = false)
+                setLayerVisibility(LAYER_CLUSTER_COUNT, visible = false)
+                setLayerVisibility(LAYER_DOTS, visible = false)
+                applyHexOpacity(0.0)
+                applyMockHeatmapGridVisibilityForCurrentMode()
+            }
+            MapVisualizationMode.SIGNAL_DOTS -> {
+                (style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer)?.fillOpacity(0.0)
+                setLayerVisibility(LAYER_HEATMAP, visible = false)
+                setLayerVisibility(LAYER_CLUSTER_BG, visible = true)
+                setLayerVisibility(LAYER_CLUSTER_COUNT, visible = true)
+                setLayerVisibility(LAYER_DOTS, visible = true)
+                applyHexOpacity(0.0)
+            }
+            MapVisualizationMode.COVERAGE_HEX -> {
+                (style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer)?.fillOpacity(0.0)
+                setLayerVisibility(LAYER_HEATMAP, visible = false)
+                setLayerVisibility(LAYER_CLUSTER_BG, visible = false)
+                setLayerVisibility(LAYER_CLUSTER_COUNT, visible = false)
+                setLayerVisibility(LAYER_DOTS, visible = false)
+                if (backendHexConnected) {
+                    applyHexOpacity(0.45)
+                } else {
+                    applyHexOpacity(0.0)
+                }
+            }
+        }
+    }
+
+    private fun applyHexOpacity(fillOpacity: Double) {
+        (style.getLayer(LAYER_HEX_FILL) as? FillLayer)?.fillOpacity(fillOpacity)
+        val outline = if (fillOpacity > 0.0) 0.35 else 0.0
+        (style.getLayer(LAYER_HEX_OUTLINE) as? LineLayer)?.lineOpacity(outline)
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -376,8 +486,19 @@ class MapLayerManager(private val style: Style) {
      */
     fun connectBackendSource(geoJsonUrl: String) {
         style.getSourceAs<GeoJsonSource>(SOURCE_BACKEND)?.url(geoJsonUrl)
-        (style.getLayer(LAYER_HEX_FILL)    as? FillLayer)?.fillOpacity(0.45)
-        (style.getLayer(LAYER_HEX_OUTLINE) as? LineLayer)?.lineOpacity(0.35)
+        backendHexConnected = true
+        if (visualizationMode == MapVisualizationMode.COVERAGE_HEX) {
+            applyHexOpacity(0.45)
+        }
+    }
+
+    /** Loads hex coverage from in-memory GeoJSON (e.g. mock data) instead of a URL. */
+    fun loadMockHexFeatureCollection(collection: FeatureCollection) {
+        style.getSourceAs<GeoJsonSource>(SOURCE_BACKEND)?.featureCollection(collection)
+        backendHexConnected = true
+        if (visualizationMode == MapVisualizationMode.COVERAGE_HEX) {
+            applyHexOpacity(0.45)
+        }
     }
 
     // ── Tap query helpers ─────────────────────────────────────────────────────
@@ -398,4 +519,15 @@ class MapLayerManager(private val style: Style) {
 
     /** The layer IDs to include in a rendered-feature query for tap detection. */
     val tappableLayers: List<String> get() = listOf(LAYER_CLUSTER_BG, LAYER_DOTS)
+
+    /**
+     * Fill layers for grid / hex cells — queried first on tap when the mode shows tappable polygons.
+     */
+    fun polygonTapLayerIdsForCurrentMode(): List<String> = when (visualizationMode) {
+        MapVisualizationMode.SPEED_HEATMAP ->
+            if (mockHeatmapGridLoaded) listOf(LAYER_MOCK_GRID_FILL) else emptyList()
+        MapVisualizationMode.COVERAGE_HEX ->
+            if (backendHexConnected) listOf(LAYER_HEX_FILL) else emptyList()
+        MapVisualizationMode.SIGNAL_DOTS -> emptyList()
+    }
 }

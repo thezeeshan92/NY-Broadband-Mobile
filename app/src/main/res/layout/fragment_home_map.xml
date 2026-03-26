@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    CoordinatorLayout root: allows BottomSheetBehavior to work correctly
-    and lets the MapView bleed behind all overlays (including the bottom nav).
+    Map tab — CoverageMap.com–style: full-bleed Mapbox map, frosted top chrome
+    (search, location, layer toggle, filter chips), layer cards, legend tab, info.
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -11,96 +11,413 @@
     android:layout_height="match_parent"
     android:clipToPadding="false">
 
-    <!-- Full-screen map rendered below all overlays -->
     <com.mapbox.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!--
-        Auto-test banner — full-width strip at the top of the screen.
-        Hidden by default; shown by renderReadyState() when autoTestActive = true.
-    -->
     <TextView
         android:id="@+id/autoTestBanner"
         android:layout_width="match_parent"
         android:layout_height="44dp"
+        android:layout_gravity="top"
+        android:layout_marginTop="132dp"
+        android:background="@color/status_measuring"
         android:gravity="center"
         android:text="@string/status_measuring"
         android:textColor="@color/white"
         android:textSize="13sp"
         android:textStyle="bold"
-        android:background="@color/status_measuring"
         android:visibility="gone"
-        tools:visibility="visible" />
+        tools:visibility="gone" />
 
-    <!--
-        Status chip: top-start, floating above the map.
-        marginTop=48dp keeps it below the status bar on most devices.
-    -->
-    <com.google.android.material.chip.Chip
-        android:id="@+id/statusChip"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/status_chip_height"
-        android:layout_marginStart="@dimen/screen_margin"
-        android:layout_marginTop="48dp"
-        android:text="@string/status_idle"
-        android:textColor="@color/white"
-        android:textSize="12sp"
-        app:chipBackgroundColor="@color/status_idle"
-        app:chipStartPadding="10dp"
-        app:chipEndPadding="10dp"
-        app:chipMinHeight="@dimen/status_chip_height"
-        app:chipCornerRadius="16dp"
-        style="@style/Widget.Material3.Chip.Assist" />
+    <!-- Top chrome: search + filters + optional layer cards -->
+    <LinearLayout
+        android:id="@+id/mapTopChrome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical">
 
-    <!--
-        Recenter FAB: bottom-end of the screen, above the bottom sheet peek area.
-        The CoordinatorLayout's padded bottom == top of BottomNavigationView (inset applied
-        in HomeMapFragment.applyBottomOffset). marginBottom is measured from that reference:
-        map_fab_margin_bottom = peek_height (88dp) + 16dp gap = 104dp
-    -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_map_glass_panel"
+            android:orientation="vertical"
+            android:padding="@dimen/map_overlay_padding">
+
+            <!-- Search + my location + map layers -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/map_search_height"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_map_search_field"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_search_24" />
+
+                    <EditText
+                        android:id="@+id/etMapSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="8dp"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/map_search_hint"
+                        android:imeOptions="actionSearch"
+                        android:inputType="textCapWords|textPostalAddress"
+                        android:maxLines="1"
+                        android:textColor="@color/black"
+                        android:textColorHint="@color/map_search_hint"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btnMapMyLocation"
+                    android:layout_width="@dimen/map_icon_button_size"
+                    android:layout_height="@dimen/map_icon_button_size"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:contentDescription="@string/map_cd_my_location"
+                    android:padding="10dp"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    android:tint="@color/map_filter_accent" />
+
+                <FrameLayout
+                    android:layout_width="@dimen/map_icon_button_size"
+                    android:layout_height="@dimen/map_icon_button_size"
+                    android:layout_marginStart="8dp">
+
+                    <ImageButton
+                        android:id="@+id/btnMapLayers"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_gradient_map_layer_btn"
+                        android:contentDescription="@string/map_cd_layers"
+                        android:padding="10dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_map_layers_24" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Status + filter chips row -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:clipToPadding="false"
+                android:fillViewport="false"
+                android:overScrollMode="never"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/btnMapFilters"
+                        android:layout_width="@dimen/map_icon_button_size"
+                        android:layout_height="@dimen/map_icon_button_size"
+                        android:background="@drawable/bg_circle_dark"
+                        android:contentDescription="@string/map_cd_filters"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_tune_24" />
+
+                    <ImageButton
+                        android:id="@+id/btnMapCountry"
+                        android:layout_width="@dimen/map_icon_button_size"
+                        android:layout_height="@dimen/map_icon_button_size"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_circle_dark"
+                        android:contentDescription="@string/map_cd_country"
+                        android:padding="6dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/flag_us_badge" />
+
+                    <TextView
+                        android:id="@+id/chipCarriers"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/map_filter_chip_height"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_map_chip_dark"
+                        android:drawableEnd="@drawable/ic_expand_more_18"
+                        android:drawablePadding="4dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/map_filter_carriers"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/chipNetwork"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/map_filter_chip_height"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_map_chip_dark"
+                        android:drawableEnd="@drawable/ic_expand_more_18"
+                        android:drawablePadding="4dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/map_filter_network"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/chipMetric"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/map_filter_chip_height"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_map_chip_dark"
+                        android:drawableEnd="@drawable/ic_expand_more_18"
+                        android:drawablePadding="4dp"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/map_filter_metric"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/statusChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/status_chip_height"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/status_idle"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        app:chipBackgroundColor="@color/status_idle"
+                        app:chipCornerRadius="16dp"
+                        app:chipMinHeight="@dimen/status_chip_height"
+                        style="@style/Widget.Material3.Chip.Assist" />
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- Layer type cards (Speed / Signal / Coverage) -->
+        <HorizontalScrollView
+            android:id="@+id/layerSelectionPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_map_layer_panel"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:padding="@dimen/map_overlay_padding"
+            android:scrollbars="none"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/cardLayerSpeed"
+                    android:layout_width="@dimen/map_layer_card_width"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <FrameLayout
+                        android:id="@+id/frameLayerSpeed"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/map_layer_card_thumb_height"
+                        android:padding="3dp">
+
+                        <ImageView
+                            android:id="@+id/thumbLayerSpeed"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/thumb_layer_speed" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/labelLayerSpeed"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/map_layer_speed_test"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@string/map_cd_info"
+                            android:src="@drawable/ic_help_outline_small" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardLayerSignal"
+                    android:layout_width="@dimen/map_layer_card_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <FrameLayout
+                        android:id="@+id/frameLayerSignal"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/map_layer_card_thumb_height"
+                        android:padding="3dp">
+
+                        <ImageView
+                            android:id="@+id/thumbLayerSignal"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/thumb_layer_signal" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/labelLayerSignal"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/map_layer_signal_strength"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@string/map_cd_info"
+                            android:src="@drawable/ic_help_outline_small" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardLayerCoverage"
+                    android:layout_width="@dimen/map_layer_card_width"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <FrameLayout
+                        android:id="@+id/frameLayerCoverage"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/map_layer_card_thumb_height"
+                        android:padding="3dp">
+
+                        <ImageView
+                            android:id="@+id/thumbLayerCoverage"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/thumb_layer_coverage" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/labelLayerCoverage"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/map_layer_coverage_report"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@string/map_cd_info"
+                            android:src="@drawable/ic_help_outline_small" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <!-- Legend tab (right edge) -->
+    <TextView
+        android:id="@+id/btnLegend"
+        android:layout_width="@dimen/map_legend_tab_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/bg_legend_tab"
+        android:elevation="4dp"
+        android:gravity="center"
+        android:lineSpacingExtra="-3dp"
+        android:minHeight="120dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:text="@string/map_legend_vertical"
+        android:textColor="@color/black"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:contentDescription="@string/map_cd_legend" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabRecenter"
+        android:id="@+id/fabMapInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="@dimen/map_fab_margin"
         android:layout_marginBottom="@dimen/map_fab_margin_bottom"
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:contentDescription="@string/cd_recenter"
+        android:contentDescription="@string/map_cd_info"
+        android:src="@android:drawable/ic_menu_info_details"
+        app:backgroundTint="@color/map_filter_accent"
+        app:elevation="4dp"
+        app:fabCustomSize="40dp"
         app:fabSize="mini"
-        app:backgroundTint="?attr/colorSurface"
-        app:tint="?attr/colorPrimary"
-        app:elevation="4dp" />
+        app:tint="@color/white" />
 
-    <!--
-        Persistent bottom sheet — 3 states:
-          COLLAPSED     (peekHeight = 88dp): drag handle + 3 action buttons
-          HALF_EXPANDED (~40% of screen):    + signal card
-          EXPANDED      (~75% of screen):    + "View My Results" link
-    -->
-    <!--
-        layout_height MUST be match_parent, not wrap_content.
-        BottomSheetBehavior.getCollapsedOffset() = Math.max(parentH - peekH, fitToContentsOffset).
-        fitToContentsOffset = parentH - childHeight. With wrap_content (childHeight≈80dp = navBar
-        height), fitToContentsOffset clamps the sheet to exactly the nav-bar level, making it
-        invisible. With match_parent (childHeight = parentH), fitToContentsOffset = 0, so the
-        clamp has no effect and the sheet collapses to (parentH - peekH) as intended.
-    -->
     <LinearLayout
         android:id="@+id/bottomSheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:background="@drawable/bg_bottom_sheet_rounded"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        app:behavior_peekHeight="@dimen/bottom_sheet_peek_height"
+        android:orientation="vertical"
+        app:behavior_halfExpandedRatio="0.40"
         app:behavior_hideable="false"
-        app:behavior_draggable="true"
-        app:behavior_halfExpandedRatio="0.40">
+        app:behavior_peekHeight="@dimen/bottom_sheet_peek_height"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-        <!-- Drag handle -->
         <View
             android:id="@+id/dragHandle"
             android:layout_width="@dimen/drag_handle_width"
@@ -110,10 +427,6 @@
             android:layout_marginBottom="@dimen/drag_handle_margin_bottom"
             android:background="@drawable/bg_drag_handle" />
 
-        <!--
-            Quick-action buttons — always visible in peek area.
-            Three equal-weight pills: Run Test (filled) / Auto Test / Dead Zone (outlined).
-        -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -126,8 +439,8 @@
                 android:id="@+id/btnRunTest"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/button_height"
-                android:layout_weight="1"
                 android:layout_marginEnd="6dp"
+                android:layout_weight="1"
                 android:text="@string/btn_run_test"
                 android:textSize="13sp"
                 style="@style/Widget.Material3.Button" />
@@ -136,8 +449,8 @@
                 android:id="@+id/btnAutoTest"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/button_height"
-                android:layout_weight="1"
                 android:layout_marginEnd="6dp"
+                android:layout_weight="1"
                 android:text="@string/btn_auto_test"
                 android:textSize="13sp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
@@ -150,13 +463,8 @@
                 android:text="@string/btn_dead_zone"
                 android:textSize="13sp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
-
         </LinearLayout>
 
-        <!--
-            Signal card — hidden when COLLAPSED, shown at HALF_EXPANDED and EXPANDED.
-            Visibility is toggled by BottomSheetCallback in HomeMapFragment.
-        -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/signalCard"
             android:layout_width="match_parent"
@@ -165,9 +473,9 @@
             android:layout_marginEnd="@dimen/screen_margin"
             android:layout_marginBottom="@dimen/card_gap"
             android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardCornerRadius="@dimen/card_corner_radius"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             tools:visibility="visible">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -175,50 +483,43 @@
                 android:layout_height="wrap_content"
                 android:padding="@dimen/card_padding">
 
-                <!-- "SIGNAL" label -->
                 <TextView
                     android:id="@+id/tvSignalLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/signal_label"
-                    android:textSize="@dimen/text_label"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:letterSpacing="0.04"
+                    android:text="@string/signal_label"
                     android:textAllCaps="true"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="@dimen/text_label"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <!-- Quality text: "Good" / "Fair" / "Weak" / "No Signal" -->
                 <TextView
                     android:id="@+id/tvSignalQuality"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginTop="2dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvSignalLabel"
                     tools:text="Good" />
 
-                <!-- Network: "4G LTE · Verizon" -->
                 <TextView
                     android:id="@+id/tvNetworkInfo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textSize="@dimen/text_body_small"
-                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginTop="2dp"
                     android:layout_marginEnd="40dp"
-                    app:layout_constraintStart_toStartOf="parent"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="@dimen/text_body_small"
                     app:layout_constraintEnd_toStartOf="@id/signalDot"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvSignalQuality"
                     tools:text="4G LTE · Verizon" />
 
-                <!--
-                    Signal tier color dot — top-end of the card.
-                    Background tint set programmatically to match the signal tier color.
-                -->
                 <View
                     android:id="@+id/signalDot"
                     android:layout_width="14dp"
@@ -226,28 +527,21 @@
                     android:background="@drawable/bg_signal_dot"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!--
-            "View My Results" link — shown only when sheet is fully EXPANDED.
-            Tapping navigates to the Results tab via BottomNavigationView.
-            Visibility is toggled by BottomSheetCallback in HomeMapFragment.
-        -->
         <TextView
             android:id="@+id/tvViewResults"
             android:layout_width="match_parent"
             android:layout_height="@dimen/min_touch_target"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/selectableItemBackground"
             android:gravity="center"
             android:text="@string/btn_view_results"
             android:textColor="?attr/colorPrimary"
             android:textSize="@dimen/text_body"
-            android:background="?attr/selectableItemBackground"
             android:visibility="gone"
-            android:layout_marginBottom="8dp"
             tools:visibility="visible" />
-
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

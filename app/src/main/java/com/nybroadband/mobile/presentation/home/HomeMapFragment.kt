@@ -15,7 +15,10 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
+import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
@@ -34,8 +37,10 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraBoundsOptions
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.RenderedQueryGeometry
@@ -72,6 +77,11 @@ class HomeMapFragment : Fragment() {
     // Created inside loadStyle() callback; nulled in onDestroyView().
     private var layerManager: MapLayerManager? = null
 
+    private var layerPanelVisible = false
+    private var mapVisualizationMode: MapVisualizationMode =
+        if (MapMockConfig.ENABLED) MapVisualizationMode.SPEED_HEATMAP
+        else MapVisualizationMode.SIGNAL_DOTS
+
     // ── Service binding ───────────────────────────────────────────────────────
     // Bound opportunistically in onStart/onStop — no BIND_AUTO_CREATE so the
     // service is only started by the Settings toggle, not by opening the map screen.
@@ -86,6 +96,20 @@ class HomeMapFragment : Fragment() {
         private const val DEFAULT_LAT = 42.965
         private const val DEFAULT_LON = -75.526
         private const val DEFAULT_ZOOM = 6.5
+
+        /** Mock data: wider view over US so grid / heatmap matches reference apps. */
+        private const val MOCK_DEFAULT_LAT = 39.5
+        private const val MOCK_DEFAULT_LON = -93.0
+        private const val MOCK_DEFAULT_ZOOM = 4.2
+
+        /**
+         * Zoom range aligned with typical coverage-map style apps (e.g. coveragemap.com):
+         * zoom out to ~0 shows the full world in Web Mercator; zoom in to street/building level.
+         */
+        private const val MAP_MIN_ZOOM_WORLD = 0.0
+        private const val MAP_MAX_ZOOM_STREET = 22.0
+
+        private const val TAG_GRID_CELL_SHEET = "grid_cell_detail"
     }
 
     // ── Permission launcher ───────────────────────────────────────────────────
@@ -120,6 +144,7 @@ class HomeMapFragment : Fragment() {
         fusedLocation = LocationServices.getFusedLocationProviderClient(requireActivity())
         setupMap()
         setupBottomSheet()
+        setupMapChrome()
         setupClickListeners()
         // observeViewModel MUST be registered before checkLocationPermission.
         // The coroutine waits for STARTED lifecycle, so it subscribes to the
@@ -135,22 +160,224 @@ class HomeMapFragment : Fragment() {
 
     private fun setupMap() {
         mapboxMap = binding.mapView.mapboxMap
+        setupMapZoomLimits()
 
-        // Frame New York State immediately — no GPS fix needed
-        mapboxMap.setCamera(
-            CameraOptions.Builder()
-                .center(Point.fromLngLat(DEFAULT_LON, DEFAULT_LAT))
-                .zoom(DEFAULT_ZOOM)
-                .build()
-        )
+        if (MapMockConfig.ENABLED) {
+            mapboxMap.setCamera(
+                CameraOptions.Builder()
+                    .center(Point.fromLngLat(MOCK_DEFAULT_LON, MOCK_DEFAULT_LAT))
+                    .zoom(MOCK_DEFAULT_ZOOM)
+                    .build()
+            )
+        } else {
+            mapboxMap.setCamera(
+                CameraOptions.Builder()
+                    .center(Point.fromLngLat(DEFAULT_LON, DEFAULT_LAT))
+                    .zoom(DEFAULT_ZOOM)
+                    .build()
+            )
+        }
 
         val styleUri = if (isDarkMode()) Style.DARK else Style.LIGHT
         mapboxMap.loadStyle(styleUri) { style ->
             mapStyleReady = true
-            layerManager = MapLayerManager(style)
+            layerManager = MapLayerManager(style).also { lm ->
+                if (MapMockConfig.ENABLED) {
+                    lm.loadMockHexFeatureCollection(MapMockData.mockCoverageHexCollection())
+                    lm.loadMockHeatmapGrid(MapMockData.mockUsCentralGridHeatmap())
+                }
+                lm.setVisualizationMode(mapVisualizationMode)
+                // Points may have been emitted before the style finished loading; StateFlow will not re-emit.
+                applyLatestMapPoints(lm)
+            }
             setupMapTapListener()
             if (hasLocationPermission()) enableLocationPuck()
         }
+    }
+
+    /** Pushes [HomeViewModel.mapPointsForDisplay] into the GeoJSON source (call whenever style is ready). */
+    private fun applyLatestMapPoints(lm: MapLayerManager) {
+        lm.updateLocalPoints(viewModel.mapPointsForDisplay.value)
+    }
+
+    /**
+     * Allows pinch-zoom from world scale (min) to building detail (max), similar to coveragemap.com.
+     * Without this, Mapbox defaults can feel overly restricted when zooming out.
+     */
+    private fun setupMapZoomLimits() {
+        mapboxMap.setBounds(
+            CameraBoundsOptions.Builder()
+                .minZoom(MAP_MIN_ZOOM_WORLD)
+                .maxZoom(MAP_MAX_ZOOM_STREET)
+                .build()
+        )
+    }
+
+    private fun setupMapChrome() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mapTopChrome) { v, insets ->
+            val top = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars()).top
+            v.updatePadding(top = top + 4)
+            insets
+        }
+        ViewCompat.requestApplyInsets(binding.mapTopChrome)
+
+        binding.etMapSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                Toast.makeText(requireContext(), R.string.map_search_not_connected, Toast.LENGTH_SHORT).show()
+                true
+            } else false
+        }
+
+        binding.btnMapLayers.setOnClickListener {
+            layerPanelVisible = !layerPanelVisible
+            binding.layerSelectionPanel.isVisible = layerPanelVisible
+        }
+
+        binding.btnMapMyLocation.setOnClickListener { recenterMap() }
+
+        binding.btnMapFilters.setOnClickListener {
+            MapFiltersBottomSheet().show(childFragmentManager, "map_filters")
+        }
+
+        binding.btnMapCountry.setOnClickListener { anchor ->
+            PopupMenu(requireContext(), anchor).apply {
+                menu.add(0, 1, 0, R.string.map_country_us)
+                menu.add(0, 2, 0, R.string.map_country_pk)
+                setOnMenuItemClickListener { item ->
+                    viewModel.setCountryFilter(
+                        if (item.itemId == 2) MapCountryFilter.PK else MapCountryFilter.US
+                    )
+                    true
+                }
+            }.show()
+        }
+
+        binding.chipCarriers.setOnClickListener { anchor ->
+            PopupMenu(requireContext(), anchor).apply {
+                menuInflater.inflate(R.menu.menu_map_carriers, menu)
+                setOnMenuItemClickListener { item ->
+                    viewModel.setCarrierFilter(
+                        when (item.itemId) {
+                            R.id.carrier_att -> MapCarrierFilter.ATT
+                            R.id.carrier_tmo -> MapCarrierFilter.TMO
+                            R.id.carrier_vzw -> MapCarrierFilter.VZW
+                            else -> MapCarrierFilter.ALL
+                        }
+                    )
+                    true
+                }
+            }.show()
+        }
+        binding.chipNetwork.setOnClickListener { anchor ->
+            PopupMenu(requireContext(), anchor).apply {
+                menuInflater.inflate(R.menu.menu_map_network, menu)
+                setOnMenuItemClickListener { item ->
+                    viewModel.setNetworkFilter(
+                        when (item.itemId) {
+                            R.id.net_all -> MapNetworkFilter.ALL
+                            R.id.net_lte_5g -> MapNetworkFilter.LTE_5G
+                            R.id.net_lte -> MapNetworkFilter.LTE_ONLY
+                            R.id.net_5g -> MapNetworkFilter.NR_ONLY
+                            else -> MapNetworkFilter.LTE_5G
+                        }
+                    )
+                    true
+                }
+            }.show()
+        }
+        binding.chipMetric.setOnClickListener { anchor ->
+            PopupMenu(requireContext(), anchor).apply {
+                menuInflater.inflate(R.menu.menu_map_metric, menu)
+                setOnMenuItemClickListener { item ->
+                    viewModel.setMetricFilter(
+                        when (item.itemId) {
+                            R.id.metric_median -> MapMetricFilter.MEDIAN
+                            R.id.metric_best -> MapMetricFilter.BEST
+                            else -> MapMetricFilter.AVERAGE
+                        }
+                    )
+                    true
+                }
+            }.show()
+        }
+
+        binding.cardLayerSpeed.setOnClickListener {
+            applyVisualizationMode(MapVisualizationMode.SPEED_HEATMAP)
+        }
+        binding.cardLayerSignal.setOnClickListener {
+            applyVisualizationMode(MapVisualizationMode.SIGNAL_DOTS)
+        }
+        binding.cardLayerCoverage.setOnClickListener {
+            applyVisualizationMode(MapVisualizationMode.COVERAGE_HEX)
+        }
+
+        binding.btnLegend.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.map_legend_title)
+                .setMessage(R.string.map_legend_body)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+
+        binding.fabMapInfo.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.map_info_title)
+                .setMessage(R.string.map_info_body)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+
+        updateLayerCardSelection()
+    }
+
+    private fun bindToolbarFilters(s: MapFilterState) {
+        binding.chipCarriers.text = when (s.carrier) {
+            MapCarrierFilter.ALL -> getString(R.string.map_filter_carriers)
+            MapCarrierFilter.ATT -> getString(R.string.map_carrier_att)
+            MapCarrierFilter.TMO -> getString(R.string.map_carrier_tmobile)
+            MapCarrierFilter.VZW -> getString(R.string.map_carrier_verizon)
+        }
+        binding.chipNetwork.text = when (s.network) {
+            MapNetworkFilter.ALL -> getString(R.string.map_network_all)
+            MapNetworkFilter.LTE_5G -> getString(R.string.map_network_lte_5g)
+            MapNetworkFilter.LTE_ONLY -> getString(R.string.map_network_lte_only)
+            MapNetworkFilter.NR_ONLY -> getString(R.string.map_network_5g_only)
+        }
+        binding.chipMetric.text = when (s.metric) {
+            MapMetricFilter.AVERAGE -> getString(R.string.map_metric_average)
+            MapMetricFilter.MEDIAN -> getString(R.string.map_metric_median)
+            MapMetricFilter.BEST -> getString(R.string.map_metric_best)
+        }
+        binding.btnMapCountry.setImageResource(
+            if (s.country == MapCountryFilter.PK) R.drawable.flag_pk_badge else R.drawable.flag_us_badge
+        )
+        binding.btnLegend.isVisible = s.showLegend
+    }
+
+    private fun applyVisualizationMode(mode: MapVisualizationMode) {
+        mapVisualizationMode = mode
+        if (mapStyleReady) {
+            layerManager?.setVisualizationMode(mode)
+            // Re-push points so clustered source is never left empty after mode / lifecycle races.
+            if (mode == MapVisualizationMode.SIGNAL_DOTS) {
+                layerManager?.updateLocalPoints(viewModel.mapPointsForDisplay.value)
+            }
+        }
+        updateLayerCardSelection()
+    }
+
+    private fun updateLayerCardSelection() {
+        val mode = mapVisualizationMode
+        val stroke = R.drawable.bg_layer_card_border_selected
+        binding.frameLayerSpeed.background = if (mode == MapVisualizationMode.SPEED_HEATMAP) {
+            ContextCompat.getDrawable(requireContext(), stroke)
+        } else null
+        binding.frameLayerSignal.background = if (mode == MapVisualizationMode.SIGNAL_DOTS) {
+            ContextCompat.getDrawable(requireContext(), stroke)
+        } else null
+        binding.frameLayerCoverage.background = if (mode == MapVisualizationMode.COVERAGE_HEX) {
+            ContextCompat.getDrawable(requireContext(), stroke)
+        } else null
     }
 
     /**
@@ -169,32 +396,64 @@ class HomeMapFragment : Fragment() {
         mapboxMap.addOnMapClickListener { point ->
             val lm = layerManager ?: return@addOnMapClickListener false
             val screenCoord = mapboxMap.pixelForCoordinate(point)
-            mapboxMap.queryRenderedFeatures(
-                RenderedQueryGeometry(screenCoord),
-                RenderedQueryOptions(lm.tappableLayers, null)
-            ) { result ->
-                val hit = result.value?.firstOrNull() ?: return@queryRenderedFeatures
-                if (lm.isCluster(hit)) {
-                    // Zoom in so the cluster can expand into individual dots.
-                    // CLUSTER_MAX_ZOOM is 13 — beyond that, only dots render.
-                    val targetZoom = (mapboxMap.cameraState.zoom + 2.0).coerceAtMost(14.0)
-                    mapboxMap.flyTo(
-                        CameraOptions.Builder()
-                            .center(point)
-                            .zoom(targetZoom)
-                            .build(),
-                        MapAnimationOptions.mapAnimationOptions { duration(400L) }
-                    )
-                } else {
-                    lm.dotId(hit)?.let { measurementId ->
-                        findNavController().navigate(
-                            R.id.action_home_to_resultDetail,
-                            bundleOf("measurementId" to measurementId)
+            val polyLayers = lm.polygonTapLayerIdsForCurrentMode()
+
+            fun handleClusterOrDot() {
+                mapboxMap.queryRenderedFeatures(
+                    RenderedQueryGeometry(screenCoord),
+                    RenderedQueryOptions(lm.tappableLayers, null)
+                ) { result ->
+                    val hit = result.value?.firstOrNull() ?: return@queryRenderedFeatures
+                    if (lm.isCluster(hit)) {
+                        val targetZoom = (mapboxMap.cameraState.zoom + 2.0).coerceAtMost(14.0)
+                        mapboxMap.flyTo(
+                            CameraOptions.Builder()
+                                .center(point)
+                                .zoom(targetZoom)
+                                .build(),
+                            MapAnimationOptions.mapAnimationOptions { duration(400L) }
                         )
+                    } else {
+                        lm.dotId(hit)?.let { measurementId ->
+                            if (measurementId.startsWith("mock-")) {
+                                Snackbar.make(
+                                    binding.root,
+                                    R.string.map_mock_no_detail,
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                                return@queryRenderedFeatures
+                            }
+                            findNavController().navigate(
+                                R.id.action_home_to_resultDetail,
+                                bundleOf("measurementId" to measurementId)
+                            )
+                        }
                     }
                 }
             }
-            true // consume — prevents camera pan on dot/cluster tap
+
+            if (polyLayers.isEmpty()) {
+                handleClusterOrDot()
+            } else {
+                mapboxMap.queryRenderedFeatures(
+                    RenderedQueryGeometry(screenCoord),
+                    RenderedQueryOptions(polyLayers, null)
+                ) { result ->
+                    val polyHit = result.value?.firstOrNull()
+                    if (polyHit != null) {
+                        val detail = GridCellDetail.fromFeature(
+                            polyHit.queriedFeature.feature,
+                            tapLat = point.latitude(),
+                            tapLon = point.longitude(),
+                        )
+                        GridCellDetailBottomSheet.newInstance(detail)
+                            .show(childFragmentManager, TAG_GRID_CELL_SHEET)
+                    } else {
+                        handleClusterOrDot()
+                    }
+                }
+            }
+            true
         }
     }
 
@@ -264,7 +523,6 @@ class HomeMapFragment : Fragment() {
                 .findViewById<BottomNavigationView>(R.id.bottomNav)
                 .selectedItemId = R.id.resultsFragment
         }
-        binding.fabRecenter.setOnClickListener { recenterMap() }
     }
 
     // ── Location helpers ──────────────────────────────────────────────────────
@@ -344,10 +602,16 @@ class HomeMapFragment : Fragment() {
                     viewModel.uiState.collect { state -> renderState(state) }
                 }
 
-                // Measurement dots on the map
                 launch {
-                    viewModel.measurementPoints.collect { points ->
-                        if (mapStyleReady) layerManager?.updateLocalPoints(points)
+                    viewModel.mapFilterState.collect { bindToolbarFilters(it) }
+                }
+
+                // Measurement + mock dots on the map
+                launch {
+                    viewModel.mapPointsForDisplay.collect { points ->
+                        if (mapStyleReady) {
+                            layerManager?.updateLocalPoints(points)
+                        }
                     }
                 }
 

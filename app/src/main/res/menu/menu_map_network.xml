@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/net_all"
+        android:title="@string/map_network_all" />
+    <item
+        android:id="@+id/net_lte_5g"
+        android:title="@string/map_network_lte_5g" />
+    <item
+        android:id="@+id/net_lte"
+        android:title="@string/map_network_lte_only" />
+    <item
+        android:id="@+id/net_5g"
+        android:title="@string/map_network_5g_only" />
+</menu>
