@@ -4,11 +4,11 @@
     <string name="app_tagline">Mapping connectivity for New York communities</string>
 
     <!--
-        Mapbox public access token (pk.ey…) — used at runtime for tile and style requests.
-        Replace YOUR_MAPBOX_PUBLIC_TOKEN_HERE with your own token from https://account.mapbox.com/
-        The token must start with pk.ey… (public token, NOT the secret sk.ey… download token).
+        mapbox_access_token is injected at build time from local.properties via resValue()
+        in app/build.gradle.kts.  Add this line to your local.properties (gitignored):
+            MAPBOX_ACCESS_TOKEN=pk.ey...
+        Never commit the real token here.
     -->
-    <string name="mapbox_access_token" translatable="false">YOUR_MAPBOX_PUBLIC_TOKEN_HERE</string>
 
     <!-- Bottom navigation -->
     <string name="nav_map">Coverage Map</string>
@@ -524,4 +524,82 @@
     <string name="map_resolution_1km">1km</string>
     <string name="map_resolution_300m">0.3km</string>
     <string name="map_resolution_100m">0.1km</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         SPEED TEST TAB
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Bottom navigation label -->
+    <string name="nav_speed">Speed</string>
+
+    <!-- SpeedTestFragment -->
+    <string name="speed_start_test">Start Test</string>
+    <string name="speed_run_multiple">Run Multiple Tests</string>
+    <string name="speed_context_indoors">Indoors</string>
+    <string name="speed_context_outdoors">Outdoors</string>
+    <string name="speed_context_driving">Driving</string>
+    <string name="speed_context_other">Other</string>
+    <string name="speed_location_default">New York, NY</string>
+    <string name="speed_location_sub">New York State</string>
+    <string name="speed_location_change">Change</string>
+    <string name="speed_detecting">Detecting…</string>
+    <string name="speed_wifi">Wi-Fi</string>
+    <string name="speed_cellular">Cellular</string>
+
+    <!-- TestInProgressFragment — CoverageMap-style speedometer screen -->
+    <string name="speed_download_mbps">Download Mbps</string>
+    <string name="speed_upload_mbps">Upload Mbps</string>
+    <string name="speed_ping_placeholder">Ping — ms</string>
+    <string name="speed_data_placeholder">Data — MB</string>
+    <!-- format: "Ping 164 ms" -->
+    <string name="speed_ping_fmt">Ping %d ms</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         TEST SETTINGS BOTTOM SHEET
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <string name="settings_test_sheet_title">Test Settings</string>
+
+    <!-- Section headers -->
+    <string name="settings_section_data_use">Data Use</string>
+    <string name="settings_section_default_server">Default Server</string>
+    <string name="settings_section_default_tag">Default Tag</string>
+    <string name="settings_section_test_duration">Test Duration</string>
+    <string name="settings_section_theme">Theme</string>
+    <string name="settings_section_units">Units</string>
+
+    <!-- Data Use rows -->
+    <string name="settings_data_all_time">All Time Total</string>
+    <string name="settings_data_period_total">Current Period Total</string>
+    <string name="settings_data_period_cellular">Current Period Cellular</string>
+    <string name="settings_data_period_wifi">Current Period Wi-Fi</string>
+    <string name="settings_set_cellular_limit">Set cellular data limit</string>
+    <string name="settings_reset_monthly">Reset Usage each Month</string>
+    <string name="settings_reset_usage">Reset Usage</string>
+    <!-- format: "52 MB" -->
+    <string name="settings_data_mb_fmt">%.1f MB</string>
+    <string name="settings_data_none">-</string>
+
+    <!-- Server -->
+    <string name="settings_server_auto">Select automatically</string>
+    <string name="settings_server_change">Change \u203A</string>
+
+    <!-- Tag -->
+    <string name="settings_use_tags">Use Tags</string>
+    <string name="settings_ask_before_test">Ask Before Each Test</string>
+
+    <!-- Duration (label only, value shown as number) -->
+    <string name="settings_download_duration">Download Duration (seconds)</string>
+    <string name="settings_upload_duration">Upload Duration (seconds)</string>
+
+    <!-- Theme options -->
+    <string name="settings_theme_default">Default</string>
+    <string name="settings_theme_glow">Glow</string>
+    <string name="settings_theme_stealth">Stealth</string>
+
+    <!-- Unit options -->
+    <string name="settings_unit_kbps">Kbps</string>
+    <string name="settings_unit_mbps">Mbps</string>
+    <string name="settings_unit_miles">Miles</string>
+    <string name="settings_unit_km">Kilometers</string>
 </resources>

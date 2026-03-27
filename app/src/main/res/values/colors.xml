@@ -70,4 +70,15 @@
     <color name="map_legend_tab_bg">#F2F2F7</color>
     <color name="map_layer_panel_bg">#E6282830</color>
 
+    <!-- Speed test screen — CoverageMap dark theme -->
+    <color name="speed_bg">#0E0E1A</color>
+    <color name="speed_surface">#1E1E30</color>
+    <color name="speed_gauge_track">#2A2A3E</color>
+    <color name="speed_gauge_arc_start">#6C63FF</color>
+    <color name="speed_gauge_arc_end">#4FC3F7</color>
+    <color name="speed_accent">#4FC3F7</color>
+    <color name="speed_gradient_start">#6C63FF</color>
+    <color name="speed_gradient_mid">#A855F7</color>
+    <color name="speed_gradient_end">#EC4899</color>
+
 </resources>

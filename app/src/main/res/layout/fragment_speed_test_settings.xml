@@ -1,0 +1,758 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Test Settings bottom sheet — mirrors CoverageMap.com Test Settings UI.
+    Sections: Data Use · Default Server · Default Tag · Test Duration · Theme · Units
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_settings_bottom_sheet"
+    android:orientation="vertical">
+
+    <!-- ── Drag handle ─────────────────────────────────────────────────────── -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_drag_handle" />
+
+    <!-- ── Header: title + close button ───────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/settings_test_sheet_title"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/btnCloseSettings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_circle_dark"
+            android:contentDescription="@string/action_close"
+            android:padding="8dp"
+            android:src="@drawable/ic_close" />
+
+    </LinearLayout>
+
+    <!-- ── Scrollable content ──────────────────────────────────────────────── -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="40dp">
+
+            <!-- ════════════════════════════════════════════════════════════
+                 DATA USE
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_data_use"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <!-- Stats card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="vertical">
+
+                <!-- All Time Total -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_data_all_time"
+                        android:textColor="#CCCCCC"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvAllTimeTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#9CA3AF"
+                        android:textSize="14sp"
+                        tools:text="52 MB" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#2A2A4E"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
+
+                <!-- Current Period Total -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_data_period_total"
+                        android:textColor="#CCCCCC"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvPeriodTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#9CA3AF"
+                        android:textSize="14sp"
+                        tools:text="52 MB" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#2A2A4E"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
+
+                <!-- Current Period Cellular -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_data_period_cellular"
+                        android:textColor="#CCCCCC"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvPeriodCellular"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#9CA3AF"
+                        android:textSize="14sp"
+                        tools:text="-" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#2A2A4E"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
+
+                <!-- Current Period Wi-Fi -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_data_period_wifi"
+                        android:textColor="#CCCCCC"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvPeriodWifi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#9CA3AF"
+                        android:textSize="14sp"
+                        tools:text="52 MB" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Set cellular data limit toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_settings_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_set_cellular_limit"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchCellularLimit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    app:trackTint="@color/switch_track_purple"
+                    app:thumbTint="#FFFFFF" />
+
+            </LinearLayout>
+
+            <!-- Reset Usage each Month toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_settings_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_reset_monthly"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchResetMonthly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    app:trackTint="@color/switch_track_purple"
+                    app:thumbTint="#FFFFFF" />
+
+            </LinearLayout>
+
+            <!-- Reset Usage button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResetUsage"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/settings_reset_usage"
+                android:textColor="#CCCCCC"
+                app:strokeColor="#44FFFFFF"
+                app:cornerRadius="12dp" />
+
+            <!-- ════════════════════════════════════════════════════════════
+                 DEFAULT SERVER
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_default_server"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_settings_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_public_24"
+                    app:tint="#9CA3AF" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings_server_auto"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_server_change"
+                    android:textColor="#4FC3F7"
+                    android:textSize="13sp" />
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
+                    android:rotation="180"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="#4FC3F7" />
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 DEFAULT TAG
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_default_tag"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <!-- Tag pill selector -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tabTagIndoors"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_selected"
+                    android:gravity="center"
+                    android:text="@string/speed_context_indoors"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tabTagOutdoors"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/speed_context_outdoors"
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tabTagDriving"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/speed_context_driving"
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tabTagOther"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/speed_context_other"
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <!-- Use Tags toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_settings_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_use_tags"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchUseTags"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    app:trackTint="@color/switch_track_green"
+                    app:thumbTint="#FFFFFF" />
+
+            </LinearLayout>
+
+            <!-- Ask Before Each Test toggle -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_settings_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_ask_before_test"
+                    android:textColor="#CCCCCC"
+                    android:textSize="14sp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchAskBefore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    app:trackTint="@color/switch_track_purple"
+                    app:thumbTint="#FFFFFF" />
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 TEST DURATION
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_test_duration"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp">
+
+                <!-- Download Duration row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_download_duration"
+                        android:textColor="#CCCCCC"
+                        android:textSize="13sp" />
+
+                    <ImageView
+                        android:id="@+id/ivLinkDurations"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_link_24"
+                        app:tint="#9CA3AF" />
+
+                    <TextView
+                        android:id="@+id/tvDownloadDuration"
+                        android:layout_width="32dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="7"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sliderDownload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="-8dp"
+                    android:layout_marginEnd="-8dp"
+                    android:valueFrom="7"
+                    android:valueTo="15"
+                    android:value="7"
+                    android:stepSize="1"
+                    app:trackColorActive="@color/speed_gauge_arc_start"
+                    app:trackColorInactive="#3A3A5E"
+                    app:thumbColor="#FFFFFF"
+                    app:thumbRadius="10dp"
+                    app:tickVisible="false"
+                    app:labelBehavior="gone" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="#2A2A4E" />
+
+                <!-- Upload Duration row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/settings_upload_duration"
+                        android:textColor="#CCCCCC"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvUploadDuration"
+                        android:layout_width="32dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="7"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sliderUpload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="-8dp"
+                    android:layout_marginEnd="-8dp"
+                    android:valueFrom="7"
+                    android:valueTo="15"
+                    android:value="7"
+                    android:stepSize="1"
+                    app:trackColorActive="@color/speed_gauge_arc_start"
+                    app:trackColorInactive="#3A3A5E"
+                    app:thumbColor="#FFFFFF"
+                    app:thumbRadius="10dp"
+                    app:tickVisible="false"
+                    app:labelBehavior="gone" />
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 THEME
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_theme"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tabThemeDefault"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_selected"
+                    android:gravity="center"
+                    android:text="@string/settings_theme_default"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tabThemeGlow"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/settings_theme_glow"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tabThemeStealth"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/settings_theme_stealth"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 UNITS
+                 ════════════════════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_section_units"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:textAllCaps="true" />
+
+            <!-- Speed unit: Kbps | Mbps -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tabUnitKbps"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/settings_unit_kbps"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tabUnitMbps"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:background="@drawable/bg_speed_context_tab_selected"
+                    android:gravity="center"
+                    android:text="@string/settings_unit_mbps"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Distance unit: Miles | Kilometers -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_settings_card"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/tabUnitMiles"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="3dp"
+                    android:background="@drawable/bg_speed_context_tab_selected"
+                    android:gravity="center"
+                    android:text="@string/settings_unit_miles"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tabUnitKilometers"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:gravity="center"
+                    android:text="@string/settings_unit_km"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

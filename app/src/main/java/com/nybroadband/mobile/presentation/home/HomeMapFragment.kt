@@ -493,12 +493,6 @@ class HomeMapFragment : Fragment() {
     // ── Click listeners ───────────────────────────────────────────────────────
 
     private fun setupClickListeners() {
-        binding.btnRunTest.setOnClickListener {
-            findNavController().navigate(R.id.action_home_to_manualTest)
-        }
-        binding.btnAutoTest.setOnClickListener {
-            findNavController().navigate(R.id.action_home_to_recurringSetup)
-        }
         binding.btnDeadZone.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_deadZone)
         }

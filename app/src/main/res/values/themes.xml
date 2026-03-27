@@ -34,6 +34,11 @@
         <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
+    <!-- Test Settings bottom sheet — dark overlay -->
+    <style name="ThemeOverlay.TestSettingsBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
     <!-- Grid cell detail — dark modal sheet over map -->
     <style name="ThemeOverlay.GridCellBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
         <item name="android:windowBackground">@android:color/transparent</item>

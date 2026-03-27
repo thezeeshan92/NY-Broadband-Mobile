@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Gauge arc (open bottom) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6.34,17.66 C4.9,16.22 4,14.21 4,12 C4,7.58 7.58,4 12,4 C16.42,4 20,7.58 20,12 C20,14.21 19.1,16.22 17.66,17.66"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+    <!-- Left tick -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6.7,15.3 L7.8,14.2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+    <!-- Right tick -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M17.3,15.3 L16.2,14.2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+    <!-- Top tick -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,5 L12,6.5"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+    <!-- Needle pointing upper-right (fast speed) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,12 L15.8,8.2"
+        android:strokeColor="@android:color/white"
+        android:strokeLineCap="round"
+        android:strokeWidth="2" />
+    <!-- Center pivot dot -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,12m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+</vector>

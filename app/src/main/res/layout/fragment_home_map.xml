@@ -427,43 +427,18 @@
             android:layout_marginBottom="@dimen/drag_handle_margin_bottom"
             android:background="@drawable/bg_drag_handle" />
 
-        <LinearLayout
+        <!-- Dead Zone is the only action remaining on the map screen.
+             Speed Test has moved to the dedicated Speed tab. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeadZone"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/screen_margin"
-            android:paddingEnd="@dimen/screen_margin"
-            android:paddingBottom="@dimen/card_gap">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRunTest"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="@string/btn_run_test"
-                android:textSize="13sp"
-                style="@style/Widget.Material3.Button" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAutoTest"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="@string/btn_auto_test"
-                android:textSize="13sp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDeadZone"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
-                android:layout_weight="1"
-                android:text="@string/btn_dead_zone"
-                android:textSize="13sp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
-        </LinearLayout>
+            android:layout_height="@dimen/button_height"
+            android:layout_marginStart="@dimen/screen_margin"
+            android:layout_marginEnd="@dimen/screen_margin"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="@string/btn_dead_zone"
+            android:textSize="14sp"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/signalCard"

@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     // Destinations where the bottom nav bar should be hidden
     private val hiddenNavDestinations = setOf(
         R.id.manualTestFragment,
+        R.id.testInProgressFragment,
         R.id.recurringSetupFragment,
         R.id.deadZoneFragment,
         R.id.testResultFragment,

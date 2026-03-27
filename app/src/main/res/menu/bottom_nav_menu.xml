@@ -2,8 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        Item IDs must exactly match the fragment IDs in nav_graph.xml.
+        Item IDs must exactly match fragment IDs in nav_graph.xml.
         NavigationUI.setupWithNavController() uses the ID to find the destination.
+
+        Tab order: Map | Speed | Cellular | Results | Settings
     -->
 
     <item
@@ -12,14 +14,19 @@
         android:title="@string/nav_map" />
 
     <item
-        android:id="@+id/resultsFragment"
-        android:icon="@drawable/ic_list"
-        android:title="@string/nav_results" />
+        android:id="@+id/speedTestFragment"
+        android:icon="@drawable/ic_speed_24"
+        android:title="@string/nav_speed" />
 
     <item
         android:id="@+id/cellularFragment"
         android:icon="@drawable/ic_cellular"
         android:title="@string/nav_cellular" />
+
+    <item
+        android:id="@+id/resultsFragment"
+        android:icon="@drawable/ic_list"
+        android:title="@string/nav_results" />
 
     <item
         android:id="@+id/settingsFragment"

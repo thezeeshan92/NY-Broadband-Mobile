@@ -1,317 +1,489 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Test In Progress — CoverageMap.com–style dark speedometer UI.
+    Shows ISP name, gradient DL/UL banner, ping/data row,
+    overall progress bar, a semi-circular SpeedometerView, and context tabs.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="#0E0E1A"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:title="@string/test_in_progress_title"
-        app:titleTextColor="?attr/colorOnSurface" />
-
-    <!-- Scrollable center content -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="@dimen/screen_margin"
-            android:paddingTop="32dp">
-
-            <!-- ── Phase step dots ─────────────────────────────────────────── -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <!-- Latency dot -->
-                <TextView
-                    android:id="@+id/dotLatency"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/phase_dot"
-                    android:contentDescription="@string/test_phase_latency" />
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="1dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <!-- Download dot -->
-                <TextView
-                    android:id="@+id/dotDownload"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/phase_dot"
-                    android:contentDescription="@string/test_phase_download" />
-
-                <View
-                    android:layout_width="28dp"
-                    android:layout_height="1dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <!-- Upload dot -->
-                <TextView
-                    android:id="@+id/dotUpload"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/phase_dot"
-                    android:contentDescription="@string/test_phase_upload" />
-
-            </LinearLayout>
-
-            <!-- Phase labels row (Latency | Download | Upload) -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/test_phase_latency"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/test_phase_download"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/test_phase_upload"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-
-            <!-- ── Big speed number ────────────────────────────────────────── -->
-            <TextView
-                android:id="@+id/tvPhaseLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="40dp"
-                android:letterSpacing="0.06"
-                android:text="@string/test_phase_starting"
-                android:textAllCaps="true"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="@dimen/text_label"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSpeedNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-light"
-                android:text="--"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="64sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSpeedUnit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/test_speed_unit_mbps"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="@dimen/text_body_small" />
-
-            <!-- ── Progress bar ────────────────────────────────────────────── -->
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/progressBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:indeterminate="true"
-                app:indicatorColor="?attr/colorPrimary"
-                app:trackColor="?attr/colorOutlineVariant"
-                app:trackCornerRadius="4dp" />
-
-            <!-- ── Live metrics 2×2 grid ──────────────────────────────────── -->
-
-            <!-- Row 1: Download | Upload -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:orientation="horizontal">
-
-                <!-- Download card -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="?attr/colorSurfaceVariant"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvDownloadResult"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/test_metric_download"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="0dp" />
-
-                <!-- Upload card -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="?attr/colorSurfaceVariant"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvUploadResult"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/test_metric_upload"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Row 2: Latency | Packet Loss -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal">
-
-                <!-- Latency card -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="?attr/colorSurfaceVariant"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvLatency"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/test_metric_latency"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="0dp" />
-
-                <!-- Packet Loss card -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="?attr/colorSurfaceVariant"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvPacketLoss"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textColor="?attr/colorOnSurface"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/test_metric_packet_loss"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="11sp" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <!-- ── Cancel link at the bottom ──────────────────────────────────────────── -->
+    <!-- ── HEADER: logo + ISP name + close button ──────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="@dimen/screen_margin"
-        android:paddingBottom="24dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/ic_launcher_round" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- ISP / Carrier name — populated in code -->
+            <TextView
+                android:id="@+id/tvCarrierName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Verizon Wireless" />
+
+            <!-- Device + connection row -->
+            <TextView
+                android:id="@+id/tvDeviceInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#9CA3AF"
+                android:textSize="12sp"
+                tools:text="Pixel 7 · Wi-Fi" />
+        </LinearLayout>
+
+        <!-- Close / cancel button -->
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_circle_dark"
+            android:contentDescription="@string/action_close"
+            android:padding="8dp"
+            android:src="@drawable/ic_close" />
+
+    </LinearLayout>
+
+    <!-- ── DL / UL GRADIENT BANNER ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_speed_metric_banner"
+        android:orientation="horizontal">
+
+        <!-- Download column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_download_24"
+                app:tint="#CCFFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/speed_download_mbps"
+                android:textColor="#CCFFFFFF"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvDownloadResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="--"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="16.00" />
+
+            <!-- Mini download progress bar -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressBarDownload"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:indeterminate="false"
+                android:progress="0"
+                app:indicatorColor="#FFFFFF"
+                app:trackColor="#44FFFFFF"
+                app:trackCornerRadius="2dp"
+                app:trackThickness="3dp" />
+        </LinearLayout>
+
+        <!-- Vertical divider -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="#44FFFFFF" />
+
+        <!-- Upload column -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_upload_24"
+                app:tint="#CCFFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/speed_upload_mbps"
+                android:textColor="#CCFFFFFF"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/tvUploadResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="--"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="5.40" />
+
+            <!-- Mini upload progress bar -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressBarUpload"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:indeterminate="false"
+                android:progress="0"
+                app:indicatorColor="#FFFFFF"
+                app:trackColor="#44FFFFFF"
+                app:trackCornerRadius="2dp"
+                app:trackThickness="3dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ── PING + DATA ROW ──────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp">
+
+        <!-- Ping / latency -->
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_schedule_24"
+            app:tint="#9CA3AF" />
 
         <TextView
-            android:id="@+id/tvCancel"
+            android:id="@+id/tvLatency"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="@string/speed_ping_placeholder"
+            android:textColor="#9CA3AF"
+            android:textSize="12sp"
+            tools:text="Ping 164 ms" />
+
+        <!-- Data used -->
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_help_outline_small"
+            app:tint="#9CA3AF" />
+
+        <TextView
+            android:id="@+id/tvDataUsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="24dp"
-            android:paddingBottom="12dp"
-            android:text="@string/test_btn_cancel"
-            android:textColor="?attr/colorError"
-            android:textSize="@dimen/text_body" />
+            android:layout_marginStart="4dp"
+            android:text="@string/speed_data_placeholder"
+            android:textColor="#9CA3AF"
+            android:textSize="12sp"
+            tools:text="Data 2 MB" />
+
+    </LinearLayout>
+
+    <!-- ── OVERALL PROGRESS BAR: phone ─── bar ─── wifi ────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="4dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_cellular"
+            app:tint="#555570" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:indeterminate="false"
+            android:progress="0"
+            app:indicatorColor="#4FC3F7"
+            app:trackColor="#2A2A3E"
+            app:trackCornerRadius="3dp"
+            app:trackThickness="5dp" />
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_wifi_24"
+            app:tint="#555570" />
+
+    </LinearLayout>
+
+    <!-- ── SPEEDOMETER ───────────────────────────────────────────────────────── -->
+    <com.nybroadband.mobile.presentation.test.SpeedometerView
+        android:id="@+id/speedometerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- ── CURRENT SPEED NUMBER ──────────────────────────────────────────────── -->
+    <TextView
+        android:id="@+id/tvSpeedNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-8dp"
+        android:gravity="center"
+        android:text="--"
+        android:textColor="#FFFFFF"
+        android:textSize="56sp"
+        android:textStyle="bold"
+        tools:text="16.00" />
+
+    <!-- Speed unit label (Mbps / ms Latency) -->
+    <TextView
+        android:id="@+id/tvSpeedUnit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/test_speed_unit_mbps"
+        android:textColor="#9CA3AF"
+        android:textSize="14sp" />
+
+    <!-- Phase label (shown subtly below unit) -->
+    <TextView
+        android:id="@+id/tvPhaseLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        android:text="@string/test_phase_starting"
+        android:textColor="#5555AA"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:letterSpacing="0.06" />
+
+    <!-- Phase dots (Latency • Download • Upload) — kept for accessibility/data -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/dotLatency"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/phase_dot"
+            android:contentDescription="@string/test_phase_latency" />
+
+        <View
+            android:layout_width="24dp"
+            android:layout_height="1dp"
+            android:background="#2A2A3E" />
+
+        <TextView
+            android:id="@+id/dotDownload"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/phase_dot"
+            android:contentDescription="@string/test_phase_download" />
+
+        <View
+            android:layout_width="24dp"
+            android:layout_height="1dp"
+            android:background="#2A2A3E" />
+
+        <TextView
+            android:id="@+id/dotUpload"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/phase_dot"
+            android:contentDescription="@string/test_phase_upload" />
+
+    </LinearLayout>
+
+    <!-- ── PACKET LOSS (hidden metric card from original, kept as data field) ─ -->
+    <!-- tvPacketLoss is invisible but still in view for binding compatibility -->
+    <TextView
+        android:id="@+id/tvPacketLoss"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        tools:text="0.00%" />
+
+    <!-- ── CONTEXT TABS ─────────────────────────────────────────────────────── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="4dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/testTabIndoors"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_speed_context_tab_selected"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/speed_context_indoors"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/testTabOutdoors"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/speed_context_outdoors"
+                android:textColor="#888888"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/testTabDriving"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/speed_context_driving"
+                android:textColor="#888888"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/testTabOther"
+                android:layout_width="wrap_content"
+                android:layout_height="34dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:gravity="center"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/speed_context_other"
+                android:textColor="#888888"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- ── LOCATION ROW ─────────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_speed_dark_surface"
+        android:gravity="center_vertical"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="@null"
+            android:src="@drawable/flag_us_badge" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/speed_location_default"
+            android:textColor="#CCCCCC"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_location_change"
+            android:textColor="#4FC3F7"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_arrow_back"
+            android:rotation="180"
+            app:tint="#4FC3F7" />
 
     </LinearLayout>
 

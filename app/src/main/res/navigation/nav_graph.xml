@@ -13,22 +13,6 @@
         tools:layout="@layout/fragment_home_map">
 
         <action
-            android:id="@+id/action_home_to_manualTest"
-            app:destination="@id/manualTestFragment"
-            app:enterAnim="@anim/slide_in_up"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out_down" />
-
-        <action
-            android:id="@+id/action_home_to_recurringSetup"
-            app:destination="@id/recurringSetupFragment"
-            app:enterAnim="@anim/slide_in_up"
-            app:exitAnim="@anim/fade_out"
-            app:popEnterAnim="@anim/fade_in"
-            app:popExitAnim="@anim/slide_out_down" />
-
-        <action
             android:id="@+id/action_home_to_deadZone"
             app:destination="@id/deadZoneFragment"
             app:enterAnim="@anim/slide_in_up"
@@ -41,20 +25,30 @@
             app:destination="@id/testResultFragment" />
     </fragment>
 
-    <!-- Manual test — full-screen fragment (converted from dialog; navigates forward to in-progress) -->
+    <!-- ===== Tab 2: Speed Test ===== -->
     <fragment
-        android:id="@+id/manualTestFragment"
-        android:name="com.nybroadband.mobile.presentation.test.ManualTestFragment"
-        android:label="Speed Test"
-        tools:layout="@layout/fragment_manual_test">
+        android:id="@+id/speedTestFragment"
+        android:name="com.nybroadband.mobile.presentation.test.SpeedTestFragment"
+        android:label="Speed"
+        tools:layout="@layout/fragment_speed_test">
 
+        <!-- Start a new test directly (no config screen) -->
         <action
-            android:id="@+id/action_manualTest_to_testInProgress"
+            android:id="@+id/action_speedTest_to_testInProgress"
             app:destination="@id/testInProgressFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
+
+        <!-- Run Multiple Tests → recurring setup -->
+        <action
+            android:id="@+id/action_speedTest_to_recurringSetup"
+            app:destination="@id/recurringSetupFragment"
+            app:enterAnim="@anim/slide_in_up"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_down" />
 
     </fragment>
 
@@ -88,6 +82,23 @@
 
     </fragment>
 
+    <!-- Manual test config screen — kept for future reference / deep-link access -->
+    <fragment
+        android:id="@+id/manualTestFragment"
+        android:name="com.nybroadband.mobile.presentation.test.ManualTestFragment"
+        android:label="Speed Test"
+        tools:layout="@layout/fragment_manual_test">
+
+        <action
+            android:id="@+id/action_manualTest_to_testInProgress"
+            app:destination="@id/testInProgressFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
+
     <!-- Recurring setup — full screen -->
     <fragment
         android:id="@+id/recurringSetupFragment"
@@ -102,7 +113,7 @@
         android:label="Report a Dead Zone"
         tools:layout="@layout/fragment_dead_zone" />
 
-    <!-- Shared result detail — reached from Home and Results -->
+    <!-- Shared result detail — reached from Speed and Results tabs -->
     <fragment
         android:id="@+id/testResultFragment"
         android:name="com.nybroadband.mobile.presentation.test.TestResultFragment"
@@ -113,14 +124,14 @@
             app:argType="string" />
     </fragment>
 
-    <!-- ===== Tab 2: Cellular Info ===== -->
+    <!-- ===== Tab 3: Cellular Info ===== -->
     <fragment
         android:id="@+id/cellularFragment"
         android:name="com.nybroadband.mobile.presentation.cellular.CellularFragment"
         android:label="Cellular"
         tools:layout="@layout/fragment_cellular" />
 
-    <!-- ===== Tab 3: My Results ===== -->
+    <!-- ===== Tab 4: My Results ===== -->
     <fragment
         android:id="@+id/resultsFragment"
         android:name="com.nybroadband.mobile.presentation.results.ResultsFragment"
@@ -132,7 +143,7 @@
             app:destination="@id/testResultFragment" />
     </fragment>
 
-    <!-- ===== Tab 3: Settings ===== -->
+    <!-- ===== Tab 5: Settings ===== -->
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.nybroadband.mobile.presentation.settings.SettingsFragment"

@@ -1,3 +1,11 @@
+import java.util.Properties
+
+// Load local.properties (gitignored) so secrets never enter source control
+val localProperties = Properties().also { props ->
+    val f = rootProject.file("local.properties")
+    if (f.exists()) props.load(f.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -24,6 +32,11 @@ android {
             "String", "API_BASE_URL",
             "\"${project.findProperty("API_BASE_URL") ?: "https://api-staging.nybroadband.ny.gov/v1/"}\""
         )
+
+        // Inject Mapbox public token from local.properties as a string resource
+        // so it is never committed to source control.
+        val mapboxToken = localProperties.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
+        resValue("string", "mapbox_access_token", mapboxToken)
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
