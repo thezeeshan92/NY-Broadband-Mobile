@@ -52,7 +52,9 @@
     <string name="test_btn_cancel">Cancel</string>
     <string name="test_btn_run_another">Run Another Test</string>
     <string name="test_btn_view_details">View Full Details</string>
-    <string name="test_btn_done">Done</string>
+    <string name="test_btn_done">Close</string>
+    <string name="test_btn_again">Test Again</string>
+    <string name="cd_back">Back</string>
     <string name="test_download_label">Mbps\nDownload</string>
     <string name="test_upload_label">Mbps\nUpload</string>
     <string name="test_latency_label">ms\nLatency</string>

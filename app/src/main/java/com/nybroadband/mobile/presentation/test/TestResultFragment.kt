@@ -10,11 +10,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.nybroadband.mobile.R
 import com.nybroadband.mobile.data.local.db.entity.MeasurementEntity
 import com.nybroadband.mobile.databinding.FragmentTestResultBinding
-import com.nybroadband.mobile.presentation.results.qualityLabel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -24,18 +24,13 @@ import java.util.Locale
 /**
  * Displays the full result of a completed speed test or passive sample.
  *
- * Receives [measurementId] as a bundle argument — from [TestInProgressFragment] after a
- * new test, or from [ResultsFragment] when the user taps a history row.
- *
- * Screen sections:
- *   1. Tier badge card     — color-coded quality label ("Good", "Fair", …)
- *   2. Speed cards         — Download and Upload Mbps
- *   3. Primary detail rows — Latency, Jitter, Network, Carrier, Server, Duration, Timestamp
- *   4. Advanced section    — Raw diagnostic data (RSRP, GPS accuracy, device, etc.)
- *                            Collapsed by default; tapping tvAdvancedToggle reveals it.
- *
- * The advanced section is intentionally opt-in — raw dBm values and session IDs are
- * diagnostic data, not intended for general users.
+ * CoverageMap dark-style layout:
+ *   • Header:  back button · carrier name + device info · tier pill
+ *   • Banner:  Download / Upload Mbps (gradient card)
+ *   • Pills:   Ping · Jitter · Data Used
+ *   • Details: Network, Carrier, Latency, Jitter, Server, Duration, Measured at
+ *   • Technical details (collapsed) — RSRP, signal bars, GPS, device, version, session
+ *   • Bottom: Close (outlined) + Test Again (gradient)
  */
 @AndroidEntryPoint
 class TestResultFragment : Fragment() {
@@ -59,15 +54,25 @@ class TestResultFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
+        binding.btnClose.setOnClickListener { findNavController().navigateUp() }
         binding.btnDone.setOnClickListener { findNavController().navigateUp() }
-
+        binding.btnTestAgain.setOnClickListener { navigateToTestAgain() }
         binding.tvAdvancedToggle.setOnClickListener { toggleAdvanced() }
 
         val id = arguments?.getString("measurementId") ?: ""
         viewModel.load(id)
 
         observeViewModel()
+    }
+
+    private fun navigateToTestAgain() {
+        findNavController().navigate(
+            R.id.speedTestFragment,
+            null,
+            NavOptions.Builder()
+                .setPopUpTo(R.id.speedTestFragment, true)
+                .build()
+        )
     }
 
     private fun observeViewModel() {
@@ -92,21 +97,33 @@ class TestResultFragment : Fragment() {
 
     private fun showNotFound() {
         binding.contentGroup.isVisible = true
-        binding.tvTierBadge.text      = "--"
-        binding.tvTierSubLabel.text   = getString(R.string.result_not_found)
-        binding.tvDownloadSpeed.text  = "--"
-        binding.tvUploadSpeed.text    = "--"
-        binding.tvLatencyValue.text   = "--"
-        binding.tvJitterValue.text    = "--"
-        binding.tvNetworkType.text    = "--"
-        binding.tvCarrierName.text    = "--"
-        binding.tvServerName.text     = "--"
-        binding.tvDuration.text       = "--"
-        binding.tvTimestamp.text      = "--"
+        binding.tvTierBadge.text     = "--"
+        binding.tvTierSubLabel.text  = getString(R.string.result_not_found)
+        binding.tvDownloadSpeed.text = "--"
+        binding.tvUploadSpeed.text   = "--"
+        binding.tvLatencyPill.text   = "--"
+        binding.tvJitterPill.text    = "--"
+        binding.tvDataUsed.text      = "--"
+        binding.tvLatencyValue.text  = "--"
+        binding.tvJitterValue.text   = "--"
+        binding.tvNetworkType.text   = "--"
+        binding.tvCarrierDetail.text = "--"
+        binding.tvServerName.text    = "--"
+        binding.tvDuration.text      = "--"
+        binding.tvTimestamp.text     = "--"
     }
 
     private fun showResult(m: MeasurementEntity) {
         binding.contentGroup.isVisible = true
+
+        // ── Header: carrier + device ──────────────────────────────────────────
+        binding.tvCarrierName.text = m.carrierName?.takeIf { it.isNotBlank() }
+            ?: getString(R.string.speed_detecting)
+        binding.tvDeviceInfo.text = buildString {
+            append(m.deviceModel)
+            val net = m.networkType.takeIf { it != "UNKNOWN" }
+            if (net != null) append(" · $net")
+        }
 
         // ── Tier badge ────────────────────────────────────────────────────────
         val (tierLabel, tierColorRes) = when (m.signalTier) {
@@ -117,9 +134,10 @@ class TestResultFragment : Fragment() {
             else   -> getString(R.string.signal_unknown) to R.color.signal_none
         }
         binding.tvTierBadge.text = tierLabel
-        binding.tierBadgeCard.setCardBackgroundColor(requireContext().getColor(tierColorRes))
+        binding.tvTierBadge.backgroundTintList =
+            requireContext().getColorStateList(tierColorRes)
 
-        // Sub-label: "Speed test · 4G LTE" or "Passive reading" or "Dead zone"
+        // ── Sub-label ─────────────────────────────────────────────────────────
         binding.tvTierSubLabel.text = buildString {
             when {
                 m.deadZoneType != null -> append(getString(R.string.result_sub_dead_zone))
@@ -134,22 +152,28 @@ class TestResultFragment : Fragment() {
             }
         }
 
-        // Placeholder badge
-        binding.tvPlaceholderBadge.isVisible = (m.testServerName == "Placeholder Test Server")
-
-        // ── Speed metrics ─────────────────────────────────────────────────────
+        // ── Speed banner ──────────────────────────────────────────────────────
         binding.tvDownloadSpeed.text = m.downloadSpeedMbps?.let { "%.1f".format(it) } ?: "--"
         binding.tvUploadSpeed.text   = m.uploadSpeedMbps?.let { "%.1f".format(it) }   ?: "--"
 
-        // ── Primary detail rows ───────────────────────────────────────────────
+        // ── Ping / Jitter / Data pills ────────────────────────────────────────
+        binding.tvLatencyPill.text = m.latencyMs?.toString() ?: "--"
+        binding.tvJitterPill.text  = m.jitterMs?.toString()  ?: "--"
+
+        val totalBytes = ((m.bytesDownloaded ?: 0L) + (m.bytesUploaded ?: 0L))
+        binding.tvDataUsed.text = if (totalBytes > 0L) {
+            "%.1f".format(totalBytes / (1024.0 * 1024.0))
+        } else "--"
+
+        // ── Detail rows ───────────────────────────────────────────────────────
+        binding.tvNetworkType.text  = m.networkType.takeIf { it != "UNKNOWN" } ?: "--"
+        binding.tvCarrierDetail.text = m.carrierName ?: "--"
         binding.tvLatencyValue.text = m.latencyMs?.let {
             getString(R.string.test_result_latency_fmt, it)
         } ?: "--"
         binding.tvJitterValue.text  = m.jitterMs?.let {
             getString(R.string.test_result_jitter_fmt, it)
         } ?: "--"
-        binding.tvNetworkType.text  = m.networkType.takeIf { it != "UNKNOWN" } ?: "--"
-        binding.tvCarrierName.text  = m.carrierName ?: "--"
         binding.tvServerName.text   = m.testServerName ?: "--"
         binding.tvDuration.text     = m.testDurationSec?.let {
             getString(R.string.test_result_duration_fmt, it)
@@ -158,7 +182,10 @@ class TestResultFragment : Fragment() {
             "MMM d, yyyy · h:mm a", Locale.getDefault()
         ).format(Date(m.timestamp))
 
-        // ── Sync status note ──────────────────────────────────────────────────
+        // ── Placeholder badge ─────────────────────────────────────────────────
+        binding.tvPlaceholderBadge.isVisible = (m.testServerName == "Placeholder Test Server")
+
+        // ── Sync status ───────────────────────────────────────────────────────
         val (syncText, showSync) = when (m.uploadStatus) {
             "PENDING" -> getString(R.string.sync_pending) to true
             "FAILED"  -> getString(R.string.sync_failed)  to true
@@ -167,7 +194,7 @@ class TestResultFragment : Fragment() {
         binding.tvSyncStatus.isVisible = showSync
         binding.tvSyncStatus.text = syncText
 
-        // ── Advanced section (pre-populate; stays hidden until toggled) ───────
+        // ── Advanced section ──────────────────────────────────────────────────
         binding.tvRsrp.text        = m.rsrp?.let { getString(R.string.result_adv_rsrp_fmt, it) } ?: "--"
         binding.tvSignalBars.text  = "${m.signalBars} / 4"
         binding.tvGpsAccuracy.text = "±%.0f m".format(m.gpsAccuracyMeters)
@@ -178,10 +205,6 @@ class TestResultFragment : Fragment() {
 
     // ── Advanced toggle ───────────────────────────────────────────────────────
 
-    /**
-     * Expands or collapses the technical details section.
-     * Uses simple show/hide — no animation needed for MVP.
-     */
     private fun toggleAdvanced() {
         advancedExpanded = !advancedExpanded
         binding.layoutAdvanced.isVisible = advancedExpanded
