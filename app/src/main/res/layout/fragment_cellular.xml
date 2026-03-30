@@ -70,11 +70,17 @@
 
     </LinearLayout>
 
-    <!-- ── Scrollable content ──────────────────────────────────────────── -->
-    <androidx.core.widget.NestedScrollView
+    <!-- ── Content area: scrollable data OR permission overlay (stacked) ── -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="1">
+
+    <!-- ── Scrollable content ──────────────────────────────────────────── -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:paddingBottom="65dp"
         android:clipToPadding="true"
         android:background="@color/cellular_bg">
@@ -149,5 +155,54 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!--
+        Phone permission denied overlay.
+        Shown by CellularFragment when READ_PHONE_STATE is not granted.
+        Stacks on top of the NestedScrollView inside the FrameLayout.
+    -->
+    <LinearLayout
+        android:id="@+id/phonePermissionOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/cellular_bg"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/perm_overlay_phone_title"
+            android:textColor="@color/cellular_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/perm_overlay_phone_body"
+            android:textColor="@color/cellular_text_label"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGrantPhonePermission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/perm_overlay_grant_phone"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
+    </FrameLayout>
 
 </LinearLayout>

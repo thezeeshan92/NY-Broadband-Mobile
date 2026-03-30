@@ -7,8 +7,9 @@
 
     <!--
         Onboarding flow (sequential):
-          Welcome → SignIn → Location → Background (API 29+) → PhoneState → Notifications (API 33+)
+          Welcome → Location → Background (API 29+) → PhoneState → Notifications (API 33+)
 
+        Sign-in/Guest screen removed — users continue directly as Guest.
         API-level branching is handled in code, not in the nav graph.
         The last active fragment calls viewModel.onOnboardingComplete() to launch MainActivity.
     -->
@@ -20,30 +21,17 @@
         android:label="Welcome"
         tools:layout="@layout/fragment_welcome">
 
+        <!-- Skip sign-in: go directly to the first permission screen -->
         <action
-            android:id="@+id/action_welcome_to_signIn"
-            app:destination="@id/signInFragment"
+            android:id="@+id/action_welcome_to_permissionLocation"
+            app:destination="@id/permissionLocationFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out_down" />
     </fragment>
 
-    <!-- Step 1: Sign In / Guest -->
-    <fragment
-        android:id="@+id/signInFragment"
-        android:name="com.nybroadband.mobile.presentation.onboarding.SignInFragment"
-        android:label="Sign In"
-        tools:layout="@layout/fragment_sign_in">
-
-        <action
-            android:id="@+id/action_signIn_to_permissionLocation"
-            app:destination="@id/permissionLocationFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left" />
-    </fragment>
-
-    <!-- Step 2: Foreground Location (required on all API levels) -->
+    <!-- Step 1 (now first after Welcome): Foreground Location (required on all API levels) -->
     <fragment
         android:id="@+id/permissionLocationFragment"
         android:name="com.nybroadband.mobile.presentation.onboarding.permission.PermissionLocationFragment"

@@ -27,8 +27,9 @@ class WelcomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Login removed — user continues as Guest; go straight to permissions.
         binding.btnGetStarted.setOnClickListener {
-            findNavController().navigate(R.id.action_welcome_to_signIn)
+            findNavController().navigate(R.id.action_welcome_to_permissionLocation)
         }
     }
 

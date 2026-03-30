@@ -40,8 +40,10 @@ import dagger.hilt.android.AndroidEntryPoint
  *     → Detected in the launcher CALLBACK (not before), where we swap the
  *       button to "Open Settings".
  *
- * Key rule: we cannot distinguish case 1 from case 3 BEFORE the dialog fires.
- * Always launch the dialog. Detect permanent denial in the result callback.
+ * KEY RULE: isPermanentlyDenied() returns the same value (false) for "never
+ * asked" AND "permanently denied" BEFORE the first dialog fires — we cannot
+ * distinguish them without attempting the launch. Always launch the dialog.
+ * Detect permanent denial only inside the result callback.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * On grant:  navigate to background location step (API 29+) or phone state (API ≤28).
@@ -102,19 +104,16 @@ class PermissionLocationFragment : Fragment() {
             return
         }
 
-        // "Don't ask again" was set in a previous session — go straight to Settings button
-        if (isPermanentlyDenied()) {
-            binding.btnAllow.text = getString(R.string.action_open_settings)
-            binding.btnAllow.setOnClickListener { openAppSettings() }
-        } else {
-            binding.btnAllow.setOnClickListener {
-                permissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
+        // Always launch the system dialog — we cannot distinguish "never asked"
+        // from "permanently denied" before the first attempt. The callback will
+        // detect permanent denial and swap the button to "Open Settings".
+        binding.btnAllow.setOnClickListener {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
                 )
-            }
+            )
         }
 
         binding.tvSkip.setOnClickListener { navigateNext(granted = false) }

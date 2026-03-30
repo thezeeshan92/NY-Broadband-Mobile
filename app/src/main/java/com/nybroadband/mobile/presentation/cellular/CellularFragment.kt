@@ -1,9 +1,14 @@
 package com.nybroadband.mobile.presentation.cellular
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DimenRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -25,6 +31,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.card.MaterialCardView
 import com.nybroadband.mobile.R
 import com.nybroadband.mobile.databinding.FragmentCellularBinding
+import com.nybroadband.mobile.presentation.AppPermissionViewModel
 import com.nybroadband.mobile.service.signal.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine
@@ -38,6 +45,25 @@ class CellularFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: CellularViewModel by activityViewModels()
+    private val permissionViewModel: AppPermissionViewModel by activityViewModels()
+
+    // Track whether we sent the user to Settings so onResume can re-check.
+    private var awaitingSettingsReturn = false
+
+    // ── Permission launcher ───────────────────────────────────────────────────
+
+    private val phonePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionViewModel.refresh()
+        updatePhonePermissionOverlay()
+        if (granted) {
+            // Reader will start emitting snapshots once permission is held.
+            viewModel.forceRefresh()
+        }
+    }
+
+    // ── View lifecycle ────────────────────────────────────────────────────────
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,10 +78,71 @@ class CellularFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         applyWindowInsetsForHeader()
         setupClickListeners()
+        updatePhonePermissionOverlay()
         observeViewModel()
     }
 
-    /** Keeps help / carrier / settings clear of status bar and display cutout (settings was easy to clip on the right). */
+    override fun onResume() {
+        super.onResume()
+        permissionViewModel.refresh()
+
+        if (awaitingSettingsReturn) {
+            awaitingSettingsReturn = false
+        }
+        updatePhonePermissionOverlay()
+        if (hasPhonePermission()) {
+            viewModel.forceRefresh()
+        }
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
+
+    // ── Permission helpers ────────────────────────────────────────────────────
+
+    private fun hasPhonePermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.READ_PHONE_STATE,
+        ) == PackageManager.PERMISSION_GRANTED
+
+    private fun isPermanentlyDenied(): Boolean =
+        !hasPhonePermission() &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.READ_PHONE_STATE)
+
+    /**
+     * Shows/hides the phone permission overlay and configures the CTA button.
+     * When permanently denied, the button opens app Settings instead of re-requesting.
+     */
+    private fun updatePhonePermissionOverlay() {
+        val b = _binding ?: return
+        val granted = hasPhonePermission()
+
+        b.phonePermissionOverlay.isVisible = !granted
+        b.scrollContent.isVisible = granted
+
+        if (!granted) {
+            if (isPermanentlyDenied()) {
+                b.btnGrantPhonePermission.text = getString(R.string.perm_overlay_open_settings)
+                b.btnGrantPhonePermission.setOnClickListener {
+                    awaitingSettingsReturn = true
+                    startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", requireContext().packageName, null)
+                        }
+                    )
+                }
+            } else {
+                b.btnGrantPhonePermission.text = getString(R.string.perm_overlay_grant_phone)
+                b.btnGrantPhonePermission.setOnClickListener {
+                    phonePermissionLauncher.launch(Manifest.permission.READ_PHONE_STATE)
+                }
+            }
+        }
+    }
+
+    /** Keeps help / carrier / settings clear of status bar and display cutout. */
     private fun applyWindowInsetsForHeader() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val sys = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -68,11 +155,6 @@ class CellularFragment : Fragment() {
             insets
         }
         ViewCompat.requestApplyInsets(binding.root)
-    }
-
-    override fun onDestroyView() {
-        _binding = null
-        super.onDestroyView()
     }
 
     private fun setupClickListeners() {
@@ -90,7 +172,12 @@ class CellularFragment : Fragment() {
                     viewModel.settings,
                     viewModel.ipTransitAsn,
                 ) { snap, settings, ip -> Triple(snap, settings, ip) }
-                    .collect { (snap, settings, ip) -> render(snap, settings, ip) }
+                    .collect { (snap, settings, ip) ->
+                        // Only render cell data when the phone permission is held.
+                        if (hasPhonePermission()) {
+                            render(snap, settings, ip)
+                        }
+                    }
             }
         }
     }
@@ -237,7 +324,7 @@ class CellularFragment : Fragment() {
         return card
     }
 
-    /** [P]  b3   freq   -96 dBm — values in white / grey like reference */
+    /** [P]  b3   freq   -96 dBm */
     private fun buildBandHeader(cell: CellEntry): View {
         val row = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -292,9 +379,6 @@ class CellularFragment : Fragment() {
         return row
     }
 
-    /**
-     * Orange fill on the left, dark track on the right (reference: partial orange bar).
-     */
     private fun buildSignalBarReference(cell: CellEntry): View {
         val fillFraction = when (cell.signalBars) {
             0 -> 0.06f
@@ -348,7 +432,6 @@ class CellularFragment : Fragment() {
         return container
     }
 
-    /** Reference layout: left column Band…PCI, right column RSRP…Distance */
     private fun buildLteParamGrid(container: LinearLayout, d: LteCellData, advanced: Boolean) {
         val rows = if (advanced) lteRowsAdvanced(d) else lteRowsBasic(d)
         rows.forEach { (left, right) ->
@@ -368,16 +451,11 @@ class CellularFragment : Fragment() {
         val r3 = "RSRQ" to orBlank(d.rsrq?.let { "$it dB" })
         val l4 = "eNb" to orBlank(d.eNb?.toString())
         val r4 = "SNR" to orBlank(formatLteSnr(d.snr))
-        return listOf(
-            l1 to r1,
-            l2 to r2,
-            l3 to r3,
-            l4 to r4,
-        )
+        return listOf(l1 to r1, l2 to r2, l3 to r3, l4 to r4)
     }
 
     private fun lteRowsAdvanced(d: LteCellData): List<Pair<Pair<String, String>, Pair<String, String>>> {
-        val dist = d.timingAdv?.let { ta -> "~${ta * 78} m" } // rough LTE TA → distance
+        val dist = d.timingAdv?.let { ta -> "~${ta * 78} m" }
         val left = listOf(
             "Band" to formatBand(d),
             "Status" to if (d.isPrimary) "Primary" else "Neighbor",
@@ -399,8 +477,7 @@ class CellularFragment : Fragment() {
         return left.zip(right) { a, b -> a to b }
     }
 
-    private fun formatBand(d: LteCellData): String =
-        d.band?.let { "b$it" } ?: placeholder()
+    private fun formatBand(d: LteCellData): String = d.band?.let { "b$it" } ?: placeholder()
 
     private fun formatLteSnr(raw: Int?): String? {
         if (raw == null) return null

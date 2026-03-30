@@ -28,6 +28,7 @@ import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -52,6 +53,7 @@ import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.nybroadband.mobile.R
 import com.nybroadband.mobile.databinding.FragmentHomeMapBinding
+import com.nybroadband.mobile.presentation.AppPermissionViewModel
 import com.nybroadband.mobile.service.PassiveCollectionService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
@@ -64,6 +66,7 @@ class HomeMapFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels()
+    private val permissionViewModel: AppPermissionViewModel by activityViewModels()
 
     private lateinit var mapboxMap: MapboxMap
     private lateinit var fusedLocation: FusedLocationProviderClient
@@ -74,7 +77,6 @@ class HomeMapFragment : Fragment() {
     private var mapStyleReady = false
 
     // Single source of truth for all Mapbox sources and layers.
-    // Created inside loadStyle() callback; nulled in onDestroyView().
     private var layerManager: MapLayerManager? = null
 
     private var layerPanelVisible = false
@@ -82,9 +84,10 @@ class HomeMapFragment : Fragment() {
         if (MapMockConfig.ENABLED) MapVisualizationMode.SPEED_HEATMAP
         else MapVisualizationMode.SIGNAL_DOTS
 
+    // Tracks whether user returned from app Settings so onResume can re-check.
+    private var awaitingSettingsReturn = false
+
     // ── Service binding ───────────────────────────────────────────────────────
-    // Bound opportunistically in onStart/onStop — no BIND_AUTO_CREATE so the
-    // service is only started by the Settings toggle, not by opening the map screen.
 
     private var serviceConnection: ServiceConnection? = null
     private var binderObservationJob: Job? = null
@@ -92,20 +95,14 @@ class HomeMapFragment : Fragment() {
     // ── Constants ─────────────────────────────────────────────────────────────
 
     companion object {
-        // Default camera — center of New York State
         private const val DEFAULT_LAT = 42.965
         private const val DEFAULT_LON = -75.526
         private const val DEFAULT_ZOOM = 6.5
 
-        /** Mock data: wider view over US so grid / heatmap matches reference apps. */
         private const val MOCK_DEFAULT_LAT = 39.5
         private const val MOCK_DEFAULT_LON = -93.0
         private const val MOCK_DEFAULT_ZOOM = 4.2
 
-        /**
-         * Zoom range aligned with typical coverage-map style apps (e.g. coveragemap.com):
-         * zoom out to ~0 shows the full world in Web Mercator; zoom in to street/building level.
-         */
         private const val MAP_MIN_ZOOM_WORLD = 0.0
         private const val MAP_MAX_ZOOM_STREET = 22.0
 
@@ -113,18 +110,26 @@ class HomeMapFragment : Fragment() {
     }
 
     // ── Permission launcher ───────────────────────────────────────────────────
+    // Used both for the overlay CTA and for the "recenter" fallback.
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         val granted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        permissionViewModel.refresh()
+
         if (granted) {
             viewModel.onLocationPermissionGranted()
             if (mapStyleReady) enableLocationPuck()
+            updatePermissionOverlay()
+        } else if (isPermanentlyDenied()) {
+            // "Don't ask again" — swap overlay button to Open Settings
+            updatePermissionOverlay()
         } else {
-            viewModel.onLocationPermissionDenied()
-            showPermissionDeniedSnackbar()
+            // Denied once — overlay stays visible, button still says "Allow"
+            updatePermissionOverlay()
         }
     }
 
@@ -133,7 +138,7 @@ class HomeMapFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentHomeMapBinding.inflate(inflater, container, false)
         return binding.root
@@ -146,14 +151,96 @@ class HomeMapFragment : Fragment() {
         setupBottomSheet()
         setupMapChrome()
         setupClickListeners()
-        // observeViewModel MUST be registered before checkLocationPermission.
-        // The coroutine waits for STARTED lifecycle, so it subscribes to the
-        // StateFlow (which holds Ready() from ViewModel.init) at onStart().
-        // If checkLocationPermission ran first it could push LocationPermissionRequired
-        // before the collector ever subscribes, silently skipping renderReadyState().
         observeViewModel()
-        checkLocationPermission()
+        // Check permission state — show overlay if needed, do NOT auto-launch dialog.
+        evaluateLocationPermission()
         applyBottomOffset()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        permissionViewModel.refresh()
+
+        if (awaitingSettingsReturn) {
+            awaitingSettingsReturn = false
+            // User returned from Settings — re-evaluate and update UI.
+        }
+
+        if (hasLocationPermission()) {
+            viewModel.onLocationPermissionGranted()
+            if (mapStyleReady) enableLocationPuck()
+        }
+        updatePermissionOverlay()
+    }
+
+    // ── Permission helpers ────────────────────────────────────────────────────
+
+    /**
+     * Called once in [onViewCreated]. Updates ViewModel state and overlay visibility
+     * WITHOUT auto-launching a permission dialog — the user must tap the overlay CTA.
+     */
+    private fun evaluateLocationPermission() {
+        if (hasLocationPermission()) {
+            viewModel.onLocationPermissionGranted()
+        } else {
+            viewModel.onLocationPermissionDenied()
+        }
+        updatePermissionOverlay()
+    }
+
+    /**
+     * Shows or hides the permission overlay based on current grant state.
+     * When permanently denied, re-labels the CTA to "Open Settings".
+     */
+    private fun updatePermissionOverlay() {
+        val b = _binding ?: return
+        val granted = hasLocationPermission()
+        b.permissionOverlay.isVisible = !granted
+
+        if (!granted) {
+            if (isPermanentlyDenied()) {
+                b.btnOverlayAllowLocation.text = getString(R.string.perm_overlay_open_settings)
+                b.btnOverlayAllowLocation.setOnClickListener { openAppSettings() }
+            } else {
+                b.btnOverlayAllowLocation.text = getString(R.string.perm_overlay_allow_location)
+                b.btnOverlayAllowLocation.setOnClickListener { requestLocationPermission() }
+            }
+        }
+    }
+
+    private fun requestLocationPermission() {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            )
+        )
+    }
+
+    private fun hasLocationPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Safe to call only after a dialog attempt has fired (or on [onResume] after Settings return).
+     * Returns true when the system will no longer show a dialog for location.
+     */
+    private fun isPermanentlyDenied(): Boolean =
+        !hasLocationPermission() &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+    private fun openAppSettings() {
+        awaitingSettingsReturn = true
+        startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", requireContext().packageName, null)
+            }
+        )
     }
 
     // ── Map ───────────────────────────────────────────────────────────────────
@@ -187,7 +274,6 @@ class HomeMapFragment : Fragment() {
                     lm.loadMockHeatmapGrid(MapMockData.mockUsCentralGridHeatmap())
                 }
                 lm.setVisualizationMode(mapVisualizationMode)
-                // Points may have been emitted before the style finished loading; StateFlow will not re-emit.
                 applyLatestMapPoints(lm)
             }
             setupMapTapListener()
@@ -195,15 +281,10 @@ class HomeMapFragment : Fragment() {
         }
     }
 
-    /** Pushes [HomeViewModel.mapPointsForDisplay] into the GeoJSON source (call whenever style is ready). */
     private fun applyLatestMapPoints(lm: MapLayerManager) {
         lm.updateLocalPoints(viewModel.mapPointsForDisplay.value)
     }
 
-    /**
-     * Allows pinch-zoom from world scale (min) to building detail (max), similar to coveragemap.com.
-     * Without this, Mapbox defaults can feel overly restricted when zooming out.
-     */
     private fun setupMapZoomLimits() {
         mapboxMap.setBounds(
             CameraBoundsOptions.Builder()
@@ -358,7 +439,6 @@ class HomeMapFragment : Fragment() {
         mapVisualizationMode = mode
         if (mapStyleReady) {
             layerManager?.setVisualizationMode(mode)
-            // Re-push points so clustered source is never left empty after mode / lifecycle races.
             if (mode == MapVisualizationMode.SIGNAL_DOTS) {
                 layerManager?.updateLocalPoints(viewModel.mapPointsForDisplay.value)
             }
@@ -380,18 +460,6 @@ class HomeMapFragment : Fragment() {
         } else null
     }
 
-    /**
-     * Registers a single map click listener that handles two tap targets:
-     *
-     *   • Cluster bubble → fly to a closer zoom so the cluster expands into
-     *     individual dots (zoom +2, capped at street level).
-     *
-     *   • Individual dot  → navigate to the result detail screen for that
-     *     measurement (action_home_to_resultDetail, passes "measurementId").
-     *
-     * Uses [MapLayerManager.tappableLayers] so the query is scoped only to
-     * cluster and dot layers — base map labels are not accidentally hit.
-     */
     private fun setupMapTapListener() {
         mapboxMap.addOnMapClickListener { point ->
             val lm = layerManager ?: return@addOnMapClickListener false
@@ -475,7 +543,6 @@ class HomeMapFragment : Fragment() {
             state = BottomSheetBehavior.STATE_COLLAPSED
         }
 
-        // Show/hide expanded-only content based on sheet state
         bottomSheet.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(sheet: View, newState: Int) {
                 val aboveCollapsed = newState != BottomSheetBehavior.STATE_COLLAPSED &&
@@ -485,8 +552,7 @@ class HomeMapFragment : Fragment() {
                     newState == BottomSheetBehavior.STATE_EXPANDED
             }
 
-            override fun onSlide(sheet: View, slideOffset: Float) { /* no-op */
-            }
+            override fun onSlide(sheet: View, slideOffset: Float) { /* no-op */ }
         })
     }
 
@@ -494,10 +560,9 @@ class HomeMapFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnDeadZone.setOnClickListener {
-            findNavController().navigate(R.id.action_home_to_deadZone)
+            navigateToDeadZoneWithPermissionCheck()
         }
 
-        // Observe result from DeadZoneFragment — show confirmation Snackbar on return
         findNavController().currentBackStackEntry?.savedStateHandle?.apply {
             getLiveData<Boolean>(com.nybroadband.mobile.presentation.deadzone.DeadZoneFragment.RESULT_SUBMITTED)
                 .observe(viewLifecycleOwner) { submitted ->
@@ -512,37 +577,55 @@ class HomeMapFragment : Fragment() {
                 }
         }
         binding.tvViewResults.setOnClickListener {
-            // Navigate to Results tab by selecting it in the bottom nav
             requireActivity()
                 .findViewById<BottomNavigationView>(R.id.bottomNav)
                 .selectedItemId = R.id.resultsFragment
         }
     }
 
-    // ── Location helpers ──────────────────────────────────────────────────────
-
-    private fun checkLocationPermission() {
+    /**
+     * Checks location permission before opening the Dead Zone report screen.
+     *
+     * Flow:
+     *  - Granted → navigate immediately.
+     *  - Not granted, can ask again → show rationale dialog → request → navigate on grant.
+     *  - Permanently denied → show rationale dialog → direct user to Settings.
+     */
+    private fun navigateToDeadZoneWithPermissionCheck() {
         if (hasLocationPermission()) {
-            viewModel.onLocationPermissionGranted()
-        } else {
-            // Do NOT push onLocationPermissionDenied() here — the launcher result
-            // callback is always async (even for permanently-denied permissions).
-            // Calling it synchronously here would set LocationPermissionRequired
-            // before the StateFlow collector subscribes at onStart(), causing the
-            // collector to never see Ready() and skipping renderReadyState().
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            findNavController().navigate(R.id.action_home_to_deadZone)
+            return
         }
+
+        val messageRes = if (isPermanentlyDenied()) {
+            R.string.perm_dead_zone_dialog_body
+        } else {
+            R.string.perm_dead_zone_dialog_body
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.perm_dead_zone_dialog_title)
+            .setMessage(messageRes)
+            .setNegativeButton(R.string.perm_dead_zone_dialog_cancel, null)
+            .setPositiveButton(R.string.perm_dead_zone_dialog_ok) { _, _ ->
+                if (isPermanentlyDenied()) {
+                    openAppSettings()
+                } else {
+                    // After grant the launcher callback refreshes the overlay;
+                    // user can then tap Dead Zone again.
+                    requestLocationPermission()
+                }
+            }
+            .show()
     }
 
-    @SuppressLint("MissingPermission")  // always guarded by hasLocationPermission()
+    // ── Location helpers ──────────────────────────────────────────────────────
+
+    @SuppressLint("MissingPermission")
     private fun recenterMap() {
         if (!hasLocationPermission()) {
-            checkLocationPermission()
+            // Show overlay and let user grant from there instead of auto-requesting.
+            updatePermissionOverlay()
             return
         }
         fusedLocation.lastLocation.addOnSuccessListener { location ->
@@ -565,33 +648,12 @@ class HomeMapFragment : Fragment() {
         )
     }
 
-    private fun hasLocationPermission(): Boolean =
-        ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-
-    private fun showPermissionDeniedSnackbar() {
-        Snackbar.make(binding.root, R.string.location_unavailable, Snackbar.LENGTH_LONG)
-            .setAction(R.string.action_open_settings) {
-                startActivity(
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", requireContext().packageName, null)
-                    }
-                )
-            }
-            .show()
-    }
-
     // ── ViewModel observation ─────────────────────────────────────────────────
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-                // Status chip, signal card, auto-test banner
                 launch {
                     viewModel.uiState.collect { state -> renderState(state) }
                 }
@@ -600,7 +662,6 @@ class HomeMapFragment : Fragment() {
                     viewModel.mapFilterState.collect { bindToolbarFilters(it) }
                 }
 
-                // Measurement + mock dots on the map
                 launch {
                     viewModel.mapPointsForDisplay.collect { points ->
                         if (mapStyleReady) {
@@ -609,7 +670,6 @@ class HomeMapFragment : Fragment() {
                     }
                 }
 
-                // One-time events (flyTo, permission request)
                 launch {
                     viewModel.events.collect { event ->
                         when (event) {
@@ -617,7 +677,7 @@ class HomeMapFragment : Fragment() {
                                 flyToLocation(event.lat, event.lon)
 
                             HomeUiEvent.RequestLocationPermission ->
-                                checkLocationPermission()
+                                requestLocationPermission()
                         }
                     }
                 }
@@ -636,6 +696,7 @@ class HomeMapFragment : Fragment() {
             HomeUiState.LocationPermissionRequired -> {
                 binding.statusChip.text = getString(R.string.location_unavailable)
                 binding.statusChip.setChipBackgroundColorResource(R.color.status_no_service)
+                // Overlay handles the visual prompt — no Snackbar.
             }
 
             is HomeUiState.Ready -> renderReadyState(state)
@@ -643,7 +704,6 @@ class HomeMapFragment : Fragment() {
     }
 
     private fun renderReadyState(state: HomeUiState.Ready) {
-        // Status chip color
         val chipColorRes = when (state.collectionStatus) {
             CollectionStatus.MEASURING,
             CollectionStatus.AUTO_TESTING -> R.color.status_measuring
@@ -656,11 +716,9 @@ class HomeMapFragment : Fragment() {
         binding.statusChip.text = state.collectionStatus.label
         binding.statusChip.setChipBackgroundColorResource(chipColorRes)
 
-        // Signal card
         binding.tvSignalQuality.text = state.signalState.qualityLabel
         binding.tvNetworkInfo.text = buildNetworkInfo(state.signalState)
 
-        // Auto-test banner (full-width strip at top)
         binding.autoTestBanner.isVisible = state.autoTestActive
     }
 
@@ -679,25 +737,6 @@ class HomeMapFragment : Fragment() {
 
     // ── Bottom offset ─────────────────────────────────────────────────────────
 
-    /**
-     * Offsets the bottom sheet and the FAB so they sit above the BottomNavigationView
-     * and the system navigation bar.
-     *
-     * Why two mechanisms:
-     *  • CoordinatorLayout.paddingBottom  — moves gravity="bottom" views (FAB) up.
-     *    CoordinatorLayout respects padding for gravity-based children.
-     *  • bottomSheet.peekHeight += totalOffset  — BottomSheetBehavior ignores the
-     *    parent's padding entirely; it positions the sheet using raw parent.height.
-     *    Adding the nav offset to peekHeight makes the visible 88 dp peek area appear
-     *    exactly above the navigation bar; the rest of the sheet body is hidden behind
-     *    it (drawing is allowed by android:clipToPadding="false" on the root).
-     *
-     * Why NOT setOnApplyWindowInsetsListener / requestApplyInsets:
-     *  • activity_main.xml has android:fitsSystemWindows="false", which breaks the
-     *    standard insets-dispatch chain so the listener is never called reliably.
-     *  • Instead we read dimensions directly once the bottomNav is laid out, using
-     *    ViewCompat.getRootWindowInsets() for the synchronous system-bar height.
-     */
     private fun applyBottomOffset() {
         val bottomNav = requireActivity().findViewById<View>(R.id.bottomNav)
         val basePeekHeight = resources.getDimensionPixelSize(R.dimen.bottom_sheet_peek_height)
@@ -719,24 +758,10 @@ class HomeMapFragment : Fragment() {
     }
 
     // ── MapView lifecycle ─────────────────────────────────────────────────────
-    // MapView in Mapbox SDK v10+ handles its own lifecycle automatically via
-    // a LifecycleObserver — no manual onStart/onStop/onDestroy calls needed.
 
     override fun onStart() {
         super.onStart()
         bindToCollectionService()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Re-evaluate permission every time the fragment becomes visible.
-        // This handles the case where the user tapped "Open Settings" via the
-        // snackbar, granted location permission there, and returned to the app.
-        // Without this, the state stays permanently at LocationPermissionRequired.
-        if (hasLocationPermission()) {
-            viewModel.onLocationPermissionGranted()
-            if (mapStyleReady) enableLocationPuck()
-        }
     }
 
     override fun onStop() {
@@ -746,21 +771,13 @@ class HomeMapFragment : Fragment() {
 
     override fun onDestroyView() {
         mapStyleReady = false
-        layerManager = null   // release Style reference before the MapView is destroyed
+        layerManager = null
         _binding = null
         super.onDestroyView()
     }
 
     // ── Service binding helpers ───────────────────────────────────────────────
 
-    /**
-     * Attempts to bind to [PassiveCollectionService] if it is already running.
-     *
-     * No [Context.BIND_AUTO_CREATE] flag — the service is only started by the
-     * Settings passive-collection toggle, not by opening the map screen. If the
-     * service is not running, [bindService] returns false silently; the signal
-     * card retains its empty/last state until the service starts.
-     */
     private fun bindToCollectionService() {
         val connection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -768,7 +785,6 @@ class HomeMapFragment : Fragment() {
 
                 binderObservationJob?.cancel()
                 binderObservationJob = viewLifecycleOwner.lifecycleScope.launch {
-                    // Forward live signal to ViewModel — drives signal card in bottom sheet
                     launch {
                         binder.latestSignal.collect { snapshot ->
                             viewModel.onNewSignalState(
@@ -776,7 +792,6 @@ class HomeMapFragment : Fragment() {
                             )
                         }
                     }
-                    // Forward collection status — drives status chip text/color
                     launch {
                         binder.collectionStatus.collect { status ->
                             viewModel.onCollectionStatusChanged(status)
@@ -786,7 +801,6 @@ class HomeMapFragment : Fragment() {
             }
 
             override fun onServiceDisconnected(name: ComponentName) {
-                // Service process died — clear to empty state
                 binderObservationJob?.cancel()
                 binderObservationJob = null
                 viewModel.onNewSignalState(SignalState.empty())
@@ -798,7 +812,7 @@ class HomeMapFragment : Fragment() {
         requireContext().bindService(
             PassiveCollectionService.startIntent(requireContext()),
             connection,
-            Context.BIND_ADJUST_WITH_ACTIVITY   // no BIND_AUTO_CREATE
+            Context.BIND_ADJUST_WITH_ACTIVITY
         )
     }
 

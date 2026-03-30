@@ -604,4 +604,33 @@
     <string name="settings_unit_mbps">Mbps</string>
     <string name="settings_unit_miles">Miles</string>
     <string name="settings_unit_km">Kilometers</string>
+    <string name="map">Map</string>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         RUNTIME PERMISSION PROMPTS (post-onboarding, in-app screens)
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Home / Map screen — location denied overlay -->
+    <string name="perm_overlay_location_title">Location Access Needed</string>
+    <string name="perm_overlay_location_body">NY Broadband uses your location to show coverage data on the map and record signal quality at your position. Without it, the map cannot display your measurements.</string>
+    <string name="perm_overlay_allow_location">Allow Location</string>
+    <string name="perm_overlay_open_settings">Open Settings</string>
+
+    <!-- Dead Zone — permission rationale dialog -->
+    <string name="perm_dead_zone_dialog_title">Location Needed</string>
+    <string name="perm_dead_zone_dialog_body">Reporting a dead zone requires your current location so we can pin it on the coverage map.</string>
+    <string name="perm_dead_zone_dialog_ok">Continue</string>
+    <string name="perm_dead_zone_dialog_cancel">Cancel</string>
+
+    <!-- Speed Test — permission rationale dialog -->
+    <string name="perm_speed_test_dialog_title">Location Needed</string>
+    <string name="perm_speed_test_dialog_body">Speed tests are tagged to your current location so results appear on the coverage map. Please allow location access to continue.</string>
+    <string name="perm_speed_test_dialog_ok">Continue</string>
+    <string name="perm_speed_test_dialog_cancel">Cancel</string>
+    <string name="perm_speed_test_settings_body">Location permission was permanently denied. Open Settings to enable it, then return to run your test.</string>
+
+    <!-- Cellular tab — phone permission denied overlay -->
+    <string name="perm_overlay_phone_title">Phone Permission Needed</string>
+    <string name="perm_overlay_phone_body">NY Broadband needs access to your phone state to read cellular signal strength, network type (4G / 5G), and carrier information.\n\nThis permission does not allow the app to read calls, messages, or contacts.</string>
+    <string name="perm_overlay_grant_phone">Grant Permission</string>
 </resources>

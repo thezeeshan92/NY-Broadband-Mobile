@@ -519,4 +519,54 @@
             tools:visibility="visible" />
     </LinearLayout>
 
+    <!--
+        Permission-required overlay.
+        Shown by HomeMapFragment when ACCESS_FINE/COARSE_LOCATION is not granted.
+        Sits above the map and bottom sheet (last child in CoordinatorLayout = drawn on top).
+        The bottom sheet is still visible beneath it so the user understands the map context.
+    -->
+    <LinearLayout
+        android:id="@+id/permissionOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/perm_overlay_location_title"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/perm_overlay_location_body"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="14sp" />
+
+        <!-- Primary CTA: request permission (switches to "Open Settings" when permanently denied) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOverlayAllowLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/perm_overlay_allow_location"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
