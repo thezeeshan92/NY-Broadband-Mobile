@@ -5,9 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.nybroadband.mobile.R
 import com.nybroadband.mobile.databinding.FragmentSignInBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,9 +23,6 @@ class SignInFragment : Fragment() {
 
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = _binding!!
-
-    // Shared with child permission fragments via activityViewModels
-    private val viewModel: OnboardingViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,7 +49,9 @@ class SignInFragment : Fragment() {
     }
 
     private fun proceedToPermissions() {
-        findNavController().navigate(R.id.action_signIn_to_permissionLocation)
+        // Sign-in screen is no longer part of the active onboarding flow.
+        // WelcomeFragment navigates directly to PermissionLocationFragment.
+        // This method is kept as a stub in case sign-in is re-introduced later.
     }
 
     override fun onDestroyView() {
