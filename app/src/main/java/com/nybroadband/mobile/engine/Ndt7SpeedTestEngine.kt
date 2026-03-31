@@ -31,6 +31,7 @@ import timber.log.Timber
 import java.io.IOException
 import java.net.UnknownHostException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.random.Random
 
@@ -121,25 +122,45 @@ private sealed class WsEvent {
  *
  * Cancellation: cancelling the collecting coroutine cancels both WebSockets cleanly
  * via [awaitClose].
+ *
+ * ── Speed calculation accuracy ────────────────────────────────────────────────
+ *
+ * The authoritative measurement for both download and upload is the NDT7 server's
+ * AppInfo frame:  speed (Mbps) = AppInfo.NumBytes * 8 / AppInfo.ElapsedTime(µs)
+ * (since 1 bit/µs = 1 Mbps).  All client-side byte counters are used only as
+ * live-display fallbacks until the first server frame arrives.
+ *
+ * Upload fallback accuracy:
+ *   OkHttp's WebSocket.send() returns true when data is enqueued in the write
+ *   buffer (max ~16 MB), NOT when it traverses the network.  A naïve bytes/elapsed
+ *   calculation therefore over-reports upload speed by up to ~25 Mbps on a 30 Mbps
+ *   link.  Instead, we track "post-saturation goodput": once the buffer first fills
+ *   (send() returns false), every subsequent successful send() means exactly
+ *   UPLOAD_CHUNK bytes just left the buffer onto the wire.  This gives a network-
+ *   accurate rate without needing server feedback.
  */
 class Ndt7SpeedTestEngine @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val moshi: Moshi
 ) : SpeedTestEngine {
 
-    private val locateAdapter    by lazy { moshi.adapter(Ndt7LocateResponse::class.java) }
+    private val locateAdapter      by lazy { moshi.adapter(Ndt7LocateResponse::class.java) }
     private val measurementAdapter by lazy { moshi.adapter(Ndt7Measurement::class.java) }
 
     companion object {
-        private const val LOCATE_URL       = "https://locate.measurementlab.net/v2/nearest/ndt/ndt7"
-        private const val NDT7_PROTOCOL    = "net.measurementlab.ndt.v7"
-        private const val DL_KEY           = "wss:///ndt/v7/download"
-        private const val UL_KEY           = "wss:///ndt/v7/upload"
-        private const val UPLOAD_CHUNK     = 32_768                 // 32 KB per WebSocket frame
-        private const val LATENCY_PHASE_MS = 1_500L                 // show LATENCY UI for first 1.5 s
-        private const val US_PER_MS        = 1_000L
-        private const val LOCATE_RETRIES   = 3                      // attempts before giving up
-        private const val LOCATE_RETRY_DELAY_MS = 2_000L            // wait between retries
+        private const val LOCATE_URL            = "https://locate.measurementlab.net/v2/nearest/ndt/ndt7"
+        private const val NDT7_PROTOCOL         = "net.measurementlab.ndt.v7"
+        private const val DL_KEY                = "wss:///ndt/v7/download"
+        private const val UL_KEY                = "wss:///ndt/v7/upload"
+        private const val UPLOAD_CHUNK          = 32_768                 // 32 KB per WebSocket frame
+        private const val LATENCY_PHASE_MS      = 1_500L                 // show LATENCY UI for first 1.5 s
+        private const val US_PER_MS             = 1_000L
+        private const val LOCATE_RETRIES        = 3
+        private const val LOCATE_RETRY_DELAY_MS = 2_000L
+        // Grace period after the sender closes the socket, giving the server time
+        // to deliver its final AppInfo measurement before we fall back to the client
+        // estimate.  2 s handles high-latency (≥ 200 ms RTT) or congested links.
+        private const val UPLOAD_GRACE_MS       = 2_000L
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -161,7 +182,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
             ?: server.urls[UL_KEY]
             ?: throw IOException("NDT7: no upload URL in locate response")
 
-        // Extract NDT7 test UUID (shared across download + upload)
         val serverUuid = server.urls.keys
             .firstOrNull { it.contains("ndt7_test_id=") }
             ?.substringAfter("ndt7_test_id=")
@@ -173,7 +193,11 @@ class Ndt7SpeedTestEngine @Inject constructor(
         val dlDurationMs    = config.durationSeconds * 1_000L
         val downloadSamples = mutableListOf<SpeedSample>()
         var bytesDownloaded = 0L
-        val dlStart         = System.currentTimeMillis()
+        // FIX (Bug 4): record dlStart on the first binary frame, not before the
+        // WebSocket handshake, so early client-side speed samples are not inflated
+        // by connection setup time.
+        val dlWallStart     = System.currentTimeMillis()   // used for duration limit only
+        var dlDataStartMs   = 0L                           // set on first binary frame
 
         var latestTcp: Ndt7TcpInfo? = null
         var latestBbr: Ndt7BbrInfo? = null
@@ -181,31 +205,40 @@ class Ndt7SpeedTestEngine @Inject constructor(
         // The NDT7 server sends periodic text frames containing AppInfo.NumBytes and
         // AppInfo.ElapsedTime (µs). These are measured from the server's perspective and
         // are the most accurate throughput measurement per the NDT7 spec:
-        //   speed (Mbps) = numBytes * 8 / elapsedTime (µs)
-        //                = numBytes * 8 / elapsedTime   [bytes*8/µs = Mbits/µs = Mbps]
-        // We update lastDlSpeedMbps on every server message and use it for the live display.
-        // The binary frame counter is kept for the progress bar and as a fallback.
+        //   speed (Mbps) = numBytes * 8 / elapsedTime(µs)
+        //                — because 1 bit/µs = 1 Mbit/s = 1 Mbps
         var latestAppInfoDl: Ndt7AppInfo? = null
         var lastDlSpeedMbps = 0.0
+        // Rate-limit UI emissions during download to 200 ms intervals.
+        // Binary frames can arrive at 60–100 Hz on fast links; emitting on every frame
+        // causes the UI to receive noisy, rapidly-oscillating speed values that make
+        // the gauge needle appear jumpy.  Byte accounting still happens on every frame.
+        var lastDlEmitMs = 0L
 
-        // Emit initial LATENCY frame so the UI transitions immediately
         send(EngineProgress(ActiveTestState.Running(
             phase = TestPhase.LATENCY, progressFraction = 0f, elapsedMs = 0
         )))
 
         openDownloadWebSocket(downloadUrl, dlDurationMs).collect { event ->
-            val elapsed = System.currentTimeMillis() - dlStart
+            val wallElapsed = System.currentTimeMillis() - dlWallStart
             when (event) {
                 is WsEvent.Binary -> {
-                    bytesDownloaded += event.byteCount
-                    val fraction    = (elapsed.toFloat() / dlDurationMs).coerceIn(0f, 1f)
+                    // Record when data first starts flowing (after handshake).
+                    if (dlDataStartMs == 0L) dlDataStartMs = System.currentTimeMillis()
+                    val elapsed = System.currentTimeMillis() - dlDataStartMs
 
-                    // Prefer the server-reported speed (updated on every text frame ~1/s).
-                    // If no server measurement has arrived yet, use client bytes / elapsed.
-                    // Note: the client-side elapsed includes WebSocket handshake time, so it
-                    // slightly underestimates speed — the server value corrects this.
+                    bytesDownloaded += event.byteCount
+
+                    // Always accumulate samples for the final result chart.
+                    val fraction = (wallElapsed.toFloat() / dlDurationMs).coerceIn(0f, 1f)
                     val speedMbps = if (lastDlSpeedMbps > 0) lastDlSpeedMbps
                         else if (elapsed > 0) bytesDownloaded * 8.0 / elapsed / 1_000.0 else 0.0
+                    downloadSamples += SpeedSample(elapsed, bytesDownloaded, speedMbps)
+
+                    // Only push a UI update every 200 ms — eliminates high-frequency
+                    // oscillation that makes the gauge needle look step-based / jumpy.
+                    if (wallElapsed - lastDlEmitMs < 200L) return@collect
+                    lastDlEmitMs = wallElapsed
 
                     val latMs       = latestTcp?.minRtt?.let { (it / US_PER_MS).toInt() }
                     val retransRate = latestTcp?.let { tcp ->
@@ -214,16 +247,14 @@ class Ndt7SpeedTestEngine @Inject constructor(
                         if (sent > 0) retrans.toDouble() / sent.toDouble() else null
                     }
 
-                    downloadSamples += SpeedSample(elapsed, bytesDownloaded, speedMbps)
-
-                    val phase = if (elapsed < LATENCY_PHASE_MS) TestPhase.LATENCY else TestPhase.DOWNLOAD
-                    val phaseFraction = if (elapsed < LATENCY_PHASE_MS)
-                        elapsed.toFloat() / LATENCY_PHASE_MS else fraction
+                    val phase = if (wallElapsed < LATENCY_PHASE_MS) TestPhase.LATENCY else TestPhase.DOWNLOAD
+                    val phaseFraction = if (wallElapsed < LATENCY_PHASE_MS)
+                        wallElapsed.toFloat() / LATENCY_PHASE_MS else fraction
 
                     send(EngineProgress(ActiveTestState.Running(
                         phase            = phase,
                         progressFraction = phaseFraction,
-                        elapsedMs        = elapsed,
+                        elapsedMs        = wallElapsed,
                         latencyMs        = latMs,
                         downloadMbps     = speedMbps,
                         downloadSamples  = downloadSamples.toList(),
@@ -234,10 +265,10 @@ class Ndt7SpeedTestEngine @Inject constructor(
                     parseMeasurement(event.payload)?.let { m ->
                         m.tcpInfo?.let { latestTcp = it }
                         m.bbrInfo?.let { latestBbr = it }
-                        // Capture authoritative server speed from AppInfo
                         m.appInfo?.let { ai ->
                             if (ai.numBytes > 0 && ai.elapsedTime > 0) {
                                 latestAppInfoDl = ai
+                                // numBytes * 8 bits / elapsedTime µs = bits/µs = Mbps
                                 lastDlSpeedMbps = ai.numBytes * 8.0 / ai.elapsedTime
                                 Timber.v("NDT7 DL server: ${ai.numBytes}B in ${ai.elapsedTime}µs → %.1f Mbps".format(lastDlSpeedMbps))
                             }
@@ -249,9 +280,8 @@ class Ndt7SpeedTestEngine @Inject constructor(
             }
         }
 
-        // Final download speed: use the LAST server AppInfo measurement (authoritative).
-        // server.appInfo.numBytes * 8 / server.appInfo.elapsedTime (µs) → Mbps
-        // Fallback: delta of client-side bytes between the 25 % and 100 % marks.
+        // Final download speed: last server AppInfo (authoritative cumulative average).
+        // Fallback: delta of client bytes between the 25 % and 100 % marks (skips slow-start).
         val avgDownloadMbps = latestAppInfoDl
             ?.let { ai -> ai.numBytes * 8.0 / ai.elapsedTime }
             ?: run {
@@ -271,7 +301,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
 
         Timber.d("NDT7: DL avg=%.1f Mbps  latency=${latencyMs}ms  bytes=$bytesDownloaded".format(avgDownloadMbps))
 
-        // Capture DL TCP/BBR for result (upload will overwrite latestTcp/Bbr)
         val dlTcp = latestTcp
         val dlBbr = latestBbr
         latestTcp = null
@@ -284,12 +313,36 @@ class Ndt7SpeedTestEngine @Inject constructor(
 
         // Server sends text frames with AppInfo.NumBytes = bytes received by server.
         // This is the authoritative upload speed (bytes * 8 / elapsedTime µs → Mbps).
-        // Client-side bytesSentCounter counts bytes queued to OkHttp's send buffer —
-        // this can overcount on variable networks, so it is only a live UI fallback.
         var latestAppInfoUl: Ndt7AppInfo? = null
         var lastUlServerSpeedMbps: Double? = null
 
-        val bytesSentCounter = java.util.concurrent.atomic.AtomicLong(0L)
+        // Counts bytes queued into OkHttp's write buffer. Because OkHttp buffers up to
+        // ~16 MB ahead of the network, this can OVERCOUNT by up to 16 MB on slow links.
+        // Never use this directly as the final speed result — it is only kept for the
+        // bytesUploaded data-usage metric stored in the database.
+        val bytesSentCounter = AtomicLong(0L)
+
+        // Wall-clock time of the first successful send() call.
+        // Using this as the time denominator (not ulStart) removes WebSocket connection
+        // setup latency (~200–500 ms) from the unsaturated-path speed calculation,
+        // preventing a systematic undercount in the early seconds of upload.
+        // Timestamp of the very first successful send() call.
+        // Using this (rather than ulStart) as the time base for unsaturated-path speed
+        // calculations eliminates the WebSocket connection setup time from the denominator,
+        // preventing a systematic undercount of upload speed in the early seconds.
+        val ulDataStartMs = AtomicLong(0L)
+
+        // Post-saturation goodput tracking.
+        //
+        // Once OkHttp's write buffer first fills up (send() returns false), the buffer
+        // is at capacity.  From that point, every successful send() means exactly
+        // UPLOAD_CHUNK bytes just left the buffer onto the wire — so the rate of
+        // successful sends after saturation equals the true network throughput.
+        //
+        // networkGoodputStartMs: wall-clock time of first buffer saturation (0 = unsaturated)
+        // networkGoodputBytes:   bytes sent successfully AFTER saturation begins
+        val networkGoodputStartMs = AtomicLong(0L)
+        val networkGoodputBytes   = AtomicLong(0L)
 
         val ulChannel = Channel<WsEvent>(Channel.UNLIMITED)
         val isOpen    = AtomicBoolean(false)
@@ -317,6 +370,7 @@ class Ndt7SpeedTestEngine @Inject constructor(
         })
 
         // Sender — waits for socket open then pumps 32 KB chunks as fast as allowed.
+        // Tracks post-saturation bytes for accurate fallback speed calculation.
         val senderJob = launch(Dispatchers.IO) {
             val chunk    = ByteArray(UPLOAD_CHUNK).also { Random.Default.nextBytes(it) }.toByteString()
             val deadline = System.currentTimeMillis() + 3_000L
@@ -325,34 +379,75 @@ class Ndt7SpeedTestEngine @Inject constructor(
             val endMs = System.currentTimeMillis() + ulDurationMs
             while (System.currentTimeMillis() < endMs) {
                 if (ulWs.send(chunk)) {
+                    // Record the timestamp of the first successful send so the progress
+                    // emitter can use actual network-send elapsed time, not ulStart.
+                    ulDataStartMs.compareAndSet(0L, System.currentTimeMillis())
                     bytesSentCounter.addAndGet(UPLOAD_CHUNK.toLong())
+                    // If the buffer has previously saturated, this send() means
+                    // UPLOAD_CHUNK bytes just flushed through the network.
+                    if (networkGoodputStartMs.get() > 0L) {
+                        networkGoodputBytes.addAndGet(UPLOAD_CHUNK.toLong())
+                    }
                 } else {
-                    delay(5) // back-pressure: OkHttp send buffer full
+                    // Back-pressure: OkHttp write buffer is full.
+                    // Record the first saturation time (compareAndSet ensures it's set once).
+                    networkGoodputStartMs.compareAndSet(0L, System.currentTimeMillis())
+                    delay(5)
                 }
             }
             ulWs.close(1000, "upload complete")
         }
 
         // Timer-based progress emitter — runs every 300 ms independent of server messages.
-        // Prefers the server-reported speed (AppInfo.NumBytes / AppInfo.ElapsedTime) when
-        // available; falls back to client-side bytes/elapsed only before the first server
-        // message arrives (typically within the first second of upload).
         val progressJob = launch {
             while (true) {
                 delay(300)
                 val elapsed   = System.currentTimeMillis() - ulStart
-                if (elapsed > ulDurationMs + 500) break
-                val bytesSent = bytesSentCounter.get()
-                // Use server-measured speed once available; client-side bytes are an
-                // upper-bound estimate (OkHttp buffers data ahead of the network).
-                val speedMbps = lastUlServerSpeedMbps
-                    ?: if (elapsed > 0) bytesSent * 8.0 / elapsed / 1_000.0 else 0.0
-                val fraction  = (elapsed.toFloat() / ulDurationMs).coerceIn(0f, 1f)
+                // Keep emitting through the full grace window so the gauge stays live
+                // while the server delivers its final AppInfo before we fall back.
+                if (elapsed > ulDurationMs + UPLOAD_GRACE_MS) break
+
+                // Priority order for live upload speed display:
+                //
+                // 1. Server AppInfo (most accurate — bytes the server actually received).
+                // 2. Post-saturation goodput: after OkHttp's write buffer first fills,
+                //    every successful send() = UPLOAD_CHUNK bytes left the buffer onto
+                //    the wire, so rate-of-sends reflects real network throughput.
+                // 3. Raw bytesSentCounter / elapsed — valid ONLY when the buffer has
+                //    never saturated, meaning OkHttp is not queuing ahead of the network.
+                //    On fast links (WiFi / high-bandwidth) the buffer may never fill, so
+                //    this is the only live estimate available.  Skip the first 800 ms so
+                //    TCP slow-start does not skew the early reading.
+                val speedMbps: Double? = lastUlServerSpeedMbps ?: run {
+                    val satStart = networkGoodputStartMs.get()
+                    if (satStart > 0L) {
+                        // Post-saturation path: buffer has filled at least once.
+                        val goodput    = networkGoodputBytes.get()
+                        val satElapsed = elapsed - (satStart - ulStart)
+                        if (satElapsed > 0L && goodput > 0L)
+                            goodput * 8.0 / satElapsed / 1_000.0
+                        else null
+                    } else {
+                        // Unsaturated path: buffer is keeping up — bytesSentCounter is accurate.
+                        // Use ulDataStartMs (time of first send) not ulStart (before socket open)
+                        // so connection setup latency doesn't deflate the speed estimate.
+                        val dataStart = ulDataStartMs.get()
+                        val bytes     = bytesSentCounter.get()
+                        if (dataStart > 0L && bytes > 0L) {
+                            val sendElapsed = System.currentTimeMillis() - dataStart
+                            if (sendElapsed > 800L)
+                                bytes * 8.0 / sendElapsed / 1_000.0
+                            else null  // skip first 800 ms of TCP slow-start
+                        } else null  // socket not yet open
+                    }
+                }
+
+                val fraction    = (elapsed.toFloat() / ulDurationMs).coerceIn(0f, 1f)
                 val retransRate = latestTcp?.let { tcp ->
                     val s = tcp.bytesSent ?: 0L; val r = tcp.bytesRetrans ?: 0L
                     if (s > 0) r.toDouble() / s.toDouble() else null
                 }
-                uploadSamples += SpeedSample(elapsed, bytesSent, speedMbps)
+                uploadSamples += SpeedSample(elapsed, bytesSentCounter.get(), speedMbps ?: 0.0)
                 send(EngineProgress(ActiveTestState.Running(
                     phase            = TestPhase.UPLOAD,
                     progressFraction = fraction,
@@ -367,6 +462,8 @@ class Ndt7SpeedTestEngine @Inject constructor(
         }
 
         // Server measurement listener — captures AppInfo for authoritative upload speed.
+        // UPLOAD_GRACE_MS = 2 s gives the server time to deliver its final AppInfo
+        // on high-latency or congested links before we fall back to the client estimate.
         try {
             for (event in ulChannel) {
                 val elapsed = System.currentTimeMillis() - ulStart
@@ -380,7 +477,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
                                     latestAppInfoUl = ai
                                     lastUlServerSpeedMbps = ai.numBytes * 8.0 / ai.elapsedTime
                                     Timber.v("NDT7 UL server: ${ai.numBytes}B in ${ai.elapsedTime}µs → %.1f Mbps".format(lastUlServerSpeedMbps))
-                                    // Align client counter with server-received bytes
                                     if (ai.numBytes > bytesSentCounter.get()) {
                                         bytesSentCounter.set(ai.numBytes)
                                     }
@@ -396,7 +492,7 @@ class Ndt7SpeedTestEngine @Inject constructor(
                     is WsEvent.Closed -> break
                     else -> Unit
                 }
-                if (elapsed >= ulDurationMs + 500) break
+                if (elapsed >= ulDurationMs + UPLOAD_GRACE_MS) break
             }
         } finally {
             progressJob.cancel()
@@ -404,29 +500,41 @@ class Ndt7SpeedTestEngine @Inject constructor(
             ulWs.cancel()
         }
 
-        // Final upload speed: server's last AppInfo measurement (bytes received by server /
-        // elapsed time on server). This is the authoritative figure — it measures bytes that
-        // actually traversed the network, ignoring OkHttp's send-buffer overcount.
+        // Final upload speed: server's last AppInfo measurement is authoritative.
+        // It measures bytes that actually traversed the network and is immune to
+        // OkHttp write-buffer overcounting.
+        //
+        // FIX (Bug 1): If server AppInfo never arrived, use post-saturation goodput
+        // instead of bytesSentCounter / totalTime, which inflates results by up to
+        // 16 MB (OkHttp's max write-queue size) on slower connections.
         val avgUploadMbps = latestAppInfoUl
             ?.let { ai -> ai.numBytes * 8.0 / ai.elapsedTime }
             ?: run {
-                // Fallback (no server measurements received): simple bytes / time, capped
-                // to the test window to avoid inflating from OkHttp buffer residue.
-                val totalMs = ulDurationMs.coerceAtLeast(1L)
-                bytesSentCounter.get() * 8.0 / totalMs / 1_000.0
+                val satStart = networkGoodputStartMs.get()
+                if (satStart > 0L) {
+                    // Post-saturation rate = bytes sent after buffer filled / duration since fill.
+                    // This reflects actual network throughput, not buffer fill rate.
+                    val goodput    = networkGoodputBytes.get()
+                    val satElapsed = ulDurationMs - (satStart - ulStart)
+                    if (satElapsed > 0L && goodput > 0L)
+                        goodput * 8.0 / satElapsed / 1_000.0
+                    else bytesSentCounter.get() * 8.0 / ulDurationMs / 1_000.0
+                } else {
+                    // Buffer never saturated: the network kept pace with the sender.
+                    // In this case bytesSentCounter is not inflated — use it directly.
+                    bytesSentCounter.get() * 8.0 / ulDurationMs / 1_000.0
+                }
             }
 
-        // Prefer UL TCP metrics for RTT (more stable during data transfer)
         val finalTcp    = latestTcp ?: dlTcp
         val finalBbr    = latestBbr ?: dlBbr
-        val totalDurSec = ((System.currentTimeMillis() - dlStart) / 1_000).toInt()
+        val totalDurSec = ((System.currentTimeMillis() - dlWallStart) / 1_000).toInt()
 
-        val retransmitRate = finalTcp
-            ?.let { tcp ->
-                val sent    = tcp.bytesSent ?: 0L
-                val retrans = tcp.bytesRetrans ?: 0L
-                if (sent > 0) retrans.toDouble() / sent.toDouble() else null
-            }
+        val retransmitRate = finalTcp?.let { tcp ->
+            val sent    = tcp.bytesSent ?: 0L
+            val retrans = tcp.bytesRetrans ?: 0L
+            if (sent > 0) retrans.toDouble() / sent.toDouble() else null
+        }
 
         Timber.i(
             "NDT7 complete: DL=%.1f UL=%.1f latency=${latencyMs}ms jitter=${jitterMs}ms " +
@@ -456,15 +564,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
 
     // ── Server discovery ──────────────────────────────────────────────────────
 
-    /**
-     * Finds the nearest NDT7 server via the M-Lab Locate v2 API.
-     *
-     * Retries up to [LOCATE_RETRIES] times with a [LOCATE_RETRY_DELAY_MS] pause between
-     * attempts to handle transient DNS failures (UnknownHostException) or flaky
-     * connectivity at test start time.
-     *
-     * Throws the last exception if all attempts fail.
-     */
     private suspend fun locateServer(): Ndt7Server {
         var lastException: Exception? = null
         repeat(LOCATE_RETRIES) { attempt ->
@@ -495,11 +594,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
 
     // ── Download WebSocket ────────────────────────────────────────────────────
 
-    /**
-     * Opens a download WebSocket and emits events until [durationMs] elapses.
-     * A timeout coroutine closes the socket after the duration — the resulting
-     * [WsEvent.Closed] terminates the flow.
-     */
     private fun openDownloadWebSocket(url: String, durationMs: Long): Flow<WsEvent> =
         callbackFlow {
             val request = Request.Builder()
@@ -524,7 +618,6 @@ class Ndt7SpeedTestEngine @Inject constructor(
                 }
             })
 
-            // Auto-close after the test duration
             launch {
                 delay(durationMs)
                 ws.close(1000, "duration elapsed")

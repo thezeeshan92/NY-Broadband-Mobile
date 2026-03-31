@@ -42,6 +42,13 @@ import kotlinx.coroutines.launch
  *
  * Receives test config as bundle args ([ARG_DURATION_SEC] + [ARG_SERVER_ID]).
  * Back press while running shows a confirmation dialog.
+ *
+ * ── Upload animation ─────────────────────────────────────────────────────────
+ * When the phase transitions from DOWNLOAD → UPLOAD the needle first glides
+ * smoothly back to zero via [SpeedometerView.sweepToZero], then rises gradually
+ * as server upload measurements arrive.  While [ActiveTestState.Running.uploadMbps]
+ * is null (before the first measurement) we do NOT call setSpeed so the sweep
+ * animation runs uninterrupted.
  */
 @AndroidEntryPoint
 class TestInProgressFragment : Fragment() {
@@ -59,9 +66,26 @@ class TestInProgressFragment : Fragment() {
     // Guard to prevent double-counting on repeated Completed state emissions
     private var dataUsageRecorded    = false
 
+    /**
+     * Tracks the most recently rendered [TestPhase] so we can detect the
+     * DOWNLOAD → UPLOAD transition and trigger the sweep-to-zero animation
+     * exactly once at phase change, rather than on every state emission.
+     */
+    private var lastRenderedPhase: TestPhase? = null
+
+    /**
+     * Exponential moving average weight for the speed text display.
+     * Each incoming reading contributes 35% of its value; prior display retains 65%.
+     * This smooths sudden spikes in the DL/UL number fields without making them
+     * feel sluggish — the first reading after a phase reset goes in directly (no lag).
+     */
+    private var displayDownloadMbps = 0.0
+    private var displayUploadMbps   = 0.0
+
     companion object {
         const val ARG_DURATION_SEC = "arg_duration_sec"
         const val ARG_SERVER_ID    = "arg_server_id"
+        private const val DISPLAY_ALPHA = 0.28  // EMA weight per incoming reading
     }
 
     override fun onCreateView(
@@ -124,7 +148,7 @@ class TestInProgressFragment : Fragment() {
         val cm = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val nc = cm.getNetworkCapabilities(cm.activeNetwork) ?: return getString(R.string.speed_cellular)
         return when {
-            nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> getString(R.string.speed_wifi)
+            nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)     -> getString(R.string.speed_wifi)
             nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> getString(R.string.speed_cellular)
             else -> getString(R.string.speed_cellular)
         }
@@ -197,6 +221,9 @@ class TestInProgressFragment : Fragment() {
     private fun renderState(state: ActiveTestState) {
         when (state) {
             ActiveTestState.Idle -> {
+                lastRenderedPhase = null
+                displayDownloadMbps = 0.0
+                displayUploadMbps   = 0.0
                 binding.tvPhaseLabel.text = getString(R.string.test_phase_starting)
                 binding.tvSpeedNumber.text = "--"
                 binding.tvSpeedUnit.text = getString(R.string.test_speed_unit_mbps)
@@ -209,6 +236,7 @@ class TestInProgressFragment : Fragment() {
             is ActiveTestState.Running -> renderRunning(state)
 
             is ActiveTestState.Completed -> {
+                lastRenderedPhase = null
                 binding.tvPhaseLabel.text = getString(R.string.test_phase_done)
                 binding.tvSpeedNumber.text = "%.1f".format(state.downloadMbps)
                 binding.tvSpeedUnit.text = getString(R.string.test_speed_unit_mbps)
@@ -221,6 +249,9 @@ class TestInProgressFragment : Fragment() {
             }
 
             is ActiveTestState.Failed -> {
+                lastRenderedPhase = null
+                displayDownloadMbps = 0.0
+                displayUploadMbps   = 0.0
                 binding.tvPhaseLabel.text = getString(R.string.test_phase_failed)
                 binding.tvSpeedNumber.text = "--"
                 binding.progressBar.isIndeterminate = false
@@ -231,7 +262,18 @@ class TestInProgressFragment : Fragment() {
     }
 
     private fun renderRunning(state: ActiveTestState.Running) {
-        // Phase label
+
+        // ── Phase transition: DOWNLOAD → UPLOAD ───────────────────────────────
+        // Glide the needle gracefully to zero instead of snapping when upload starts.
+        // This fires once at the phase boundary because lastRenderedPhase changes to
+        // UPLOAD on the same call, preventing repeated sweepToZero() invocations.
+        if (state.phase == TestPhase.UPLOAD && lastRenderedPhase == TestPhase.DOWNLOAD) {
+            binding.speedometerView.sweepToZero()
+            displayUploadMbps = 0.0   // reset so first upload reading goes in directly
+        }
+        lastRenderedPhase = state.phase
+
+        // ── Phase label ───────────────────────────────────────────────────────
         binding.tvPhaseLabel.text = getString(
             when (state.phase) {
                 TestPhase.LATENCY  -> R.string.test_phase_latency
@@ -240,31 +282,55 @@ class TestInProgressFragment : Fragment() {
             },
         )
 
-        // Phase dots
+        // ── Phase dots ────────────────────────────────────────────────────────
         binding.dotLatency.isActivated  = state.phase != TestPhase.LATENCY
         binding.dotDownload.isActivated = state.phase == TestPhase.DOWNLOAD || state.phase == TestPhase.UPLOAD
         binding.dotUpload.isActivated   = state.phase == TestPhase.UPLOAD
 
-        // Current speed for the big number and speedometer
-        val activeSpeed = when (state.phase) {
-            TestPhase.LATENCY  -> null
-            TestPhase.DOWNLOAD -> state.downloadMbps
-            TestPhase.UPLOAD   -> state.uploadMbps
+        // ── EMA smoothing (computed first — used by both gauge and text) ─────────
+        // Apply before calling setSpeed() so the gauge receives the already-smoothed
+        // value rather than the raw oscillating engine measurement.
+        state.downloadMbps?.let { raw ->
+            displayDownloadMbps = if (displayDownloadMbps == 0.0) raw
+                                  else displayDownloadMbps * (1.0 - DISPLAY_ALPHA) + raw * DISPLAY_ALPHA
+        }
+        state.uploadMbps?.let { raw ->
+            displayUploadMbps = if (displayUploadMbps == 0.0) raw
+                                else displayUploadMbps * (1.0 - DISPLAY_ALPHA) + raw * DISPLAY_ALPHA
         }
 
-        binding.tvSpeedNumber.text = activeSpeed?.let { "%.1f".format(it) } ?: "--"
-        binding.tvSpeedUnit.text = if (activeSpeed != null) {
+        // ── Gauge + center speed number ───────────────────────────────────────
+        // Both the needle and the large number now use the same EMA-smoothed value,
+        // so they always agree and the needle moves fluidly without chasing noise.
+        val hasDownload = displayDownloadMbps > 0.0
+        val hasUpload   = displayUploadMbps   > 0.0
+
+        val gaugeSpeed: Float? = when (state.phase) {
+            TestPhase.LATENCY  -> null
+            TestPhase.DOWNLOAD -> if (hasDownload) displayDownloadMbps.toFloat() else null
+            TestPhase.UPLOAD   -> if (hasUpload)   displayUploadMbps.toFloat()   else null
+        }
+
+        binding.tvSpeedNumber.text = when (state.phase) {
+            TestPhase.LATENCY  -> "--"
+            TestPhase.DOWNLOAD -> if (hasDownload) "%.1f".format(displayDownloadMbps) else "--"
+            TestPhase.UPLOAD   -> if (hasUpload)   "%.1f".format(displayUploadMbps)   else "--"
+        }
+        binding.tvSpeedUnit.text = if (gaugeSpeed != null) {
             getString(R.string.test_speed_unit_mbps)
         } else {
             getString(R.string.test_speed_unit_latency)
         }
 
-        // Drive the speedometer needle
-        val speedForGauge = activeSpeed?.toFloat() ?: 0f
-        binding.speedometerView.setSpeed(speedForGauge)
+        // Drive needle only when we have a smoothed value.
+        // During LATENCY: needle rests at zero.
+        // During early UPLOAD (sweepToZero still running): null keeps the sweep uninterrupted.
+        if (gaugeSpeed != null) {
+            binding.speedometerView.setSpeed(gaugeSpeed)
+        }
 
-        // Download banner value + mini progress bar
-        binding.tvDownloadResult.text = state.downloadMbps?.let { "%.1f".format(it) } ?: "--"
+        // ── Download banner value + mini progress bar ─────────────────────────
+        binding.tvDownloadResult.text = if (hasDownload) "%.1f".format(displayDownloadMbps) else "--"
         binding.progressBarDownload.isIndeterminate = false
         binding.progressBarDownload.progress = when (state.phase) {
             TestPhase.LATENCY  -> 0
@@ -272,30 +338,30 @@ class TestInProgressFragment : Fragment() {
             TestPhase.UPLOAD   -> 100
         }
 
-        // Upload banner value + mini progress bar
-        binding.tvUploadResult.text = state.uploadMbps?.let { "%.1f".format(it) } ?: "--"
+        // ── Upload banner value + mini progress bar ───────────────────────────
+        binding.tvUploadResult.text = if (hasUpload) "%.1f".format(displayUploadMbps) else "--"
         binding.progressBarUpload.isIndeterminate = false
         binding.progressBarUpload.progress = when (state.phase) {
             TestPhase.LATENCY, TestPhase.DOWNLOAD -> 0
             TestPhase.UPLOAD -> (state.progressFraction * 100).toInt()
         }
 
-        // Latency / ping row
+        // ── Ping / latency row ────────────────────────────────────────────────
         binding.tvLatency.text = state.latencyMs
             ?.let { getString(R.string.speed_ping_fmt, it) }
             ?: getString(R.string.speed_ping_placeholder)
 
-        // Packet loss (hidden view — kept for binding compatibility)
+        // ── Packet loss (hidden view — kept for binding compatibility) ─────────
         binding.tvPacketLoss.text = state.retransmitRate
             ?.let { getString(R.string.test_packet_loss_fmt, it * 100.0) } ?: "--"
 
-        // Overall progress bar (phone → wifi)
+        // ── Overall progress bar (phone → wifi) ───────────────────────────────
         binding.progressBar.isIndeterminate = state.phase == TestPhase.LATENCY
         if (state.phase != TestPhase.LATENCY) {
             val overall = when (state.phase) {
                 TestPhase.DOWNLOAD -> 33 + (state.progressFraction * 34).toInt()
                 TestPhase.UPLOAD   -> 67 + (state.progressFraction * 33).toInt()
-                else -> 0
+                else               -> 0
             }
             binding.progressBar.progress = overall
         }

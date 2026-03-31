@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Test In Progress — CoverageMap.com–style dark speedometer UI.
-    Shows ISP name, gradient DL/UL banner, ping/data row,
-    overall progress bar, a semi-circular SpeedometerView, and context tabs.
+    Root is ConstraintLayout so the SpeedometerView can expand to fill available
+    space without being squeezed by sibling views on small screens.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0E0E1A"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
 
     <!-- ── HEADER: logo + ISP name + close button ──────────────────────────── -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/headerRow"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingTop="12dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="12dp">
+        android:paddingBottom="10dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:layout_width="26dp"
@@ -37,7 +41,6 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- ISP / Carrier name — populated in code -->
             <TextView
                 android:id="@+id/tvCarrierName"
                 android:layout_width="wrap_content"
@@ -47,7 +50,6 @@
                 android:textStyle="bold"
                 tools:text="Verizon Wireless" />
 
-            <!-- Device + connection row -->
             <TextView
                 android:id="@+id/tvDeviceInfo"
                 android:layout_width="wrap_content"
@@ -57,7 +59,6 @@
                 tools:text="Pixel 7 · Wi-Fi" />
         </LinearLayout>
 
-        <!-- Close / cancel button -->
         <ImageButton
             android:id="@+id/btnClose"
             android:layout_width="36dp"
@@ -71,12 +72,16 @@
 
     <!-- ── DL / UL GRADIENT BANNER ─────────────────────────────────────────── -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:id="@+id/bannerRow"
+        android:layout_width="0dp"
+        android:layout_height="92dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/bg_speed_metric_banner"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/headerRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Download column -->
         <LinearLayout
@@ -85,11 +90,11 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="10dp">
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_download_24"
                 app:tint="#CCFFFFFF" />
@@ -97,7 +102,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="@string/speed_download_mbps"
                 android:textColor="#CCFFFFFF"
                 android:textSize="11sp" />
@@ -106,19 +111,18 @@
                 android:id="@+id/tvDownloadResult"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="--"
                 android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
-                tools:text="16.00" />
+                tools:text="28.9" />
 
-            <!-- Mini download progress bar -->
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progressBarDownload"
-                android:layout_width="80dp"
+                android:layout_width="72dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:indeterminate="false"
                 android:progress="0"
                 app:indicatorColor="#FFFFFF"
@@ -131,8 +135,8 @@
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="14dp"
             android:background="#44FFFFFF" />
 
         <!-- Upload column -->
@@ -142,11 +146,11 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="10dp">
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_upload_24"
                 app:tint="#CCFFFFFF" />
@@ -154,7 +158,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="@string/speed_upload_mbps"
                 android:textColor="#CCFFFFFF"
                 android:textSize="11sp" />
@@ -163,19 +167,18 @@
                 android:id="@+id/tvUploadResult"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="--"
                 android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
-                tools:text="5.40" />
+                tools:text="--" />
 
-            <!-- Mini upload progress bar -->
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progressBarUpload"
-                android:layout_width="80dp"
+                android:layout_width="72dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:indeterminate="false"
                 android:progress="0"
                 app:indicatorColor="#FFFFFF"
@@ -188,15 +191,17 @@
 
     <!-- ── PING + DATA ROW ──────────────────────────────────────────────────── -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="36dp"
+        android:id="@+id/statsRow"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
-        android:paddingTop="8dp">
+        app:layout_constraintTop_toBottomOf="@id/bannerRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Ping / latency -->
         <ImageView
             android:layout_width="14dp"
             android:layout_height="14dp"
@@ -208,47 +213,49 @@
             android:id="@+id/tvLatency"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:text="@string/speed_ping_placeholder"
             android:textColor="#9CA3AF"
             android:textSize="12sp"
-            tools:text="Ping 164 ms" />
+            tools:text="Ping 153 ms" />
 
-        <!-- Data used -->
         <ImageView
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:contentDescription="@null"
-            android:src="@drawable/ic_help_outline_small"
+            android:src="@drawable/ic_wifi_24"
             app:tint="#9CA3AF" />
 
         <TextView
             android:id="@+id/tvDataUsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="5dp"
             android:text="@string/speed_data_placeholder"
             android:textColor="#9CA3AF"
             android:textSize="12sp"
-            tools:text="Data 2 MB" />
+            tools:text="Data 40 MB" />
 
     </LinearLayout>
 
     <!-- ── OVERALL PROGRESS BAR: phone ─── bar ─── wifi ────────────────────── -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/progressRow"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
-        android:paddingTop="4dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="4dp">
+        android:paddingBottom="2dp"
+        app:layout_constraintTop_toBottomOf="@id/statsRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_cellular"
             app:tint="#555570" />
@@ -262,125 +269,148 @@
             android:layout_weight="1"
             android:indeterminate="false"
             android:progress="0"
-            app:indicatorColor="#4FC3F7"
-            app:trackColor="#2A2A3E"
+            app:indicatorColor="#5B8AF5"
+            app:trackColor="#1E1E2E"
             app:trackCornerRadius="3dp"
-            app:trackThickness="5dp" />
+            app:trackThickness="4dp" />
 
         <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_wifi_24"
             app:tint="#555570" />
 
     </LinearLayout>
 
-    <!-- ── SPEEDOMETER ───────────────────────────────────────────────────────── -->
+    <!-- ── SPEEDOMETER (capped height so it never dominates the screen) ─────── -->
     <com.nybroadband.mobile.presentation.test.SpeedometerView
         android:id="@+id/speedometerView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        app:layout_constraintTop_toBottomOf="@id/progressRow"
+        app:layout_constraintBottom_toTopOf="@id/tvSpeedNumber"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_min="120dp"
+        app:layout_constraintHeight_max="190dp"
+        app:layout_constraintVertical_bias="0.0" />
 
     <!-- ── CURRENT SPEED NUMBER ──────────────────────────────────────────────── -->
     <TextView
         android:id="@+id/tvSpeedNumber"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="-8dp"
         android:gravity="center"
         android:text="--"
         android:textColor="#FFFFFF"
-        android:textSize="56sp"
+        android:textSize="52sp"
         android:textStyle="bold"
-        tools:text="16.00" />
+        android:includeFontPadding="false"
+        app:layout_constraintBottom_toTopOf="@id/tvSpeedUnit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="44.08" />
 
-    <!-- Speed unit label (Mbps / ms Latency) -->
+    <!-- Speed unit label -->
     <TextView
         android:id="@+id/tvSpeedUnit"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/test_speed_unit_mbps"
         android:textColor="#9CA3AF"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/tvPhaseLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Phase label (shown subtly below unit) -->
+    <!-- Phase label -->
     <TextView
         android:id="@+id/tvPhaseLabel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:gravity="center"
-        android:text="@string/test_phase_starting"
-        android:textColor="#5555AA"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:textAllCaps="true"
-        android:letterSpacing="0.06" />
-
-    <!-- Phase dots (Latency • Download • Upload) — kept for accessibility/data -->
-    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:text="@string/test_phase_starting"
+        android:textColor="#8888CC"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:letterSpacing="0.06"
+        android:layout_marginBottom="6dp"
+        app:layout_constraintBottom_toTopOf="@id/phaseDotsRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ── PHASE DOTS ─────────────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/phaseDotsRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:layout_marginBottom="8dp"
-        android:orientation="horizontal">
+        app:layout_constraintBottom_toTopOf="@id/contextTabsScroll"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:id="@+id/dotLatency"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/phase_dot"
             android:contentDescription="@string/test_phase_latency" />
 
         <View
             android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:background="#2A2A3E" />
+            android:layout_height="2dp"
+            android:background="#3A3A5E" />
 
         <TextView
             android:id="@+id/dotDownload"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/phase_dot"
             android:contentDescription="@string/test_phase_download" />
 
         <View
             android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:background="#2A2A3E" />
+            android:layout_height="2dp"
+            android:background="#3A3A5E" />
 
         <TextView
             android:id="@+id/dotUpload"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/phase_dot"
             android:contentDescription="@string/test_phase_upload" />
 
     </LinearLayout>
 
-    <!-- ── PACKET LOSS (hidden metric card from original, kept as data field) ─ -->
-    <!-- tvPacketLoss is invisible but still in view for binding compatibility -->
+    <!-- hidden packet loss field — kept for binding compatibility -->
     <TextView
         android:id="@+id/tvPacketLoss"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         tools:text="0.00%" />
 
     <!-- ── CONTEXT TABS ─────────────────────────────────────────────────────── -->
     <HorizontalScrollView
-        android:layout_width="match_parent"
+        android:id="@+id/contextTabsScroll"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:overScrollMode="never"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="4dp"
-        android:scrollbars="none">
+        android:paddingBottom="6dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/locationRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -393,8 +423,8 @@
                 android:layout_height="34dp"
                 android:background="@drawable/bg_speed_context_tab_selected"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
                 android:text="@string/speed_context_indoors"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -404,11 +434,11 @@
                 android:id="@+id/testTabOutdoors"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_speed_context_tab_unselected"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
                 android:text="@string/speed_context_outdoors"
                 android:textColor="#888888"
                 android:textSize="13sp" />
@@ -417,11 +447,11 @@
                 android:id="@+id/testTabDriving"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_speed_context_tab_unselected"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
                 android:text="@string/speed_context_driving"
                 android:textColor="#888888"
                 android:textSize="13sp" />
@@ -430,11 +460,11 @@
                 android:id="@+id/testTabOther"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_speed_context_tab_unselected"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
                 android:text="@string/speed_context_other"
                 android:textColor="#888888"
                 android:textSize="13sp" />
@@ -444,20 +474,24 @@
 
     <!-- ── LOCATION ROW ─────────────────────────────────────────────────────── -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_speed_dark_surface"
-        android:gravity="center_vertical"
+        android:id="@+id/locationRow"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/bg_speed_dark_surface"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="12dp"
-        android:paddingEnd="12dp">
+        android:paddingEnd="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="@null"
             android:src="@drawable/flag_us_badge" />
 
@@ -474,17 +508,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/speed_location_change"
-            android:textColor="#4FC3F7"
+            android:textColor="#5B8AF5"
             android:textSize="12sp" />
 
         <ImageView
             android:layout_width="14dp"
             android:layout_height="14dp"
+            android:layout_marginStart="2dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_arrow_back"
             android:rotation="180"
-            app:tint="#4FC3F7" />
+            app:tint="#5B8AF5" />
 
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

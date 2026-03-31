@@ -107,7 +107,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="64dp">
+        android:paddingBottom="90dp">
 
         <!-- Gear icon (left) + Signal icon (right) -->
         <LinearLayout
@@ -125,7 +125,8 @@
                 android:background="@drawable/bg_circle_dark"
                 android:contentDescription="@string/settings_title"
                 android:padding="10dp"
-                android:src="@drawable/ic_settings" />
+                android:src="@drawable/ic_settings"
+                app:tint="@color/white" />
 
             <Space
                 android:layout_width="0dp"
@@ -139,7 +140,8 @@
                 android:background="@drawable/bg_circle_dark"
                 android:contentDescription="@string/cellular_section_connection"
                 android:padding="10dp"
-                android:src="@drawable/ic_cellular" />
+                android:src="@drawable/ic_cellular"
+                app:tint="@color/white" />
 
         </LinearLayout>
 

@@ -103,7 +103,6 @@ class MapLayerManager(private val style: Style) {
 
     private var visualizationMode: MapVisualizationMode = MapVisualizationMode.SIGNAL_DOTS
     private var backendHexConnected: Boolean = false
-    private var mockHeatmapGridLoaded: Boolean = false
 
     // ── Source / Layer ID constants ───────────────────────────────────────────
 
@@ -310,6 +309,7 @@ class MapLayerManager(private val style: Style) {
     private fun addHeatmapLayer() {
         style.addLayer(
             heatmapLayer(LAYER_HEATMAP, SOURCE_LOCAL) {
+                // Weight each point by its signal quality
                 heatmapWeight(
                     Expression.fromRaw(
                         """
@@ -323,19 +323,38 @@ class MapLayerManager(private val style: Style) {
                         """.trimIndent()
                     )
                 )
+                // Color ramp: transparent → red (poor) → orange → yellow → green → blue (excellent)
+                heatmapColor(
+                    Expression.fromRaw(
+                        """
+                        ["interpolate", ["linear"], ["heatmap-density"],
+                            0.0,  "rgba(0,0,0,0)",
+                            0.08, "rgba(220,38,38,0.4)",
+                            0.25, "rgba(234,88,12,0.72)",
+                            0.45, "rgba(234,179,8,0.82)",
+                            0.65, "rgba(22,163,74,0.88)",
+                            0.82, "rgba(5,150,105,0.92)",
+                            1.0,  "rgba(59,130,246,0.96)"
+                        ]
+                        """.trimIndent()
+                    )
+                )
+                // Intensity rises as we zoom in — more weight per overlapping point
                 heatmapIntensity(
                     Expression.fromRaw(
-                        """["interpolate", ["linear"], ["zoom"], 6, 0.6, 12, 1.4]"""
+                        """["interpolate", ["linear"], ["zoom"], 3, 0.4, 6, 0.8, 10, 1.2, 13, 1.6]"""
                     )
                 )
+                // Large radius at low zoom for broad smooth blobs; tightens at street level
                 heatmapRadius(
                     Expression.fromRaw(
-                        """["interpolate", ["linear"], ["zoom"], 4, 28, 6, 48, 10, 55, 14, 40]"""
+                        """["interpolate", ["linear"], ["zoom"], 2, 22, 4, 38, 6, 55, 10, 65, 14, 48]"""
                     )
                 )
+                // Heatmap fades out above zoom 13 where individual dots take over
                 heatmapOpacity(
                     Expression.fromRaw(
-                        """["interpolate", ["linear"], ["zoom"], 4, 0.85, 10, 0.88, 14, 0.82]"""
+                        """["interpolate", ["linear"], ["zoom"], 4, 0.90, 10, 0.88, 13, 0.55, 15, 0.0]"""
                     )
                 )
             }
@@ -372,29 +391,15 @@ class MapLayerManager(private val style: Style) {
         )
     }
 
-    /** Loads square-grid coverage (CoverageMap-style) for mock heatmap mode. */
+    /**
+     * Loads the square-grid GeoJSON into SOURCE_MOCK_GRID (retained for tap-detail queries
+     * in COVERAGE_HEX mode). SPEED_HEATMAP mode now uses the real Mapbox HeatmapLayer
+     * instead of this polygon grid, so visibility is not changed here.
+     */
     fun loadMockHeatmapGrid(collection: FeatureCollection) {
         style.getSourceAs<GeoJsonSource>(SOURCE_MOCK_GRID)?.featureCollection(collection)
-        val feats = collection.features()
-        mockHeatmapGridLoaded = feats != null && feats.isNotEmpty()
-        if (visualizationMode == MapVisualizationMode.SPEED_HEATMAP) {
-            applyMockHeatmapGridVisibilityForCurrentMode()
-        }
-    }
-
-    private fun applyMockHeatmapGridVisibilityForCurrentMode() {
-        val grid = style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer ?: return
-        if (visualizationMode != MapVisualizationMode.SPEED_HEATMAP) {
-            grid.fillOpacity(0.0)
-            return
-        }
-        if (mockHeatmapGridLoaded) {
-            grid.fillOpacity(0.52)
-            setLayerVisibility(LAYER_HEATMAP, false)
-        } else {
-            grid.fillOpacity(0.0)
-            setLayerVisibility(LAYER_HEATMAP, true)
-        }
+        // Visibility is controlled exclusively by setVisualizationMode().
+        // SPEED_HEATMAP mode uses the real HeatmapLayer, not this polygon source.
     }
 
     private fun setLayerVisibility(layerId: String, visible: Boolean) {
@@ -405,19 +410,26 @@ class MapLayerManager(private val style: Style) {
 
     /**
      * Switches between CoverageMap-style views: speed heatmap, signal dots, or hex coverage.
+     *
+     * SPEED_HEATMAP: real Mapbox HeatmapLayer (smooth GPU interpolation) + individual dots
+     *   visible at high zoom once the heatmap opacity fades to zero above zoom 13.
+     *   The legacy square-polygon mock grid is never shown in this mode.
      */
     fun setVisualizationMode(mode: MapVisualizationMode) {
         visualizationMode = mode
+        // Always ensure mock polygon grid is hidden — it is not used in any mode.
+        (style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer)?.fillOpacity(0.0)
         when (mode) {
             MapVisualizationMode.SPEED_HEATMAP -> {
+                setLayerVisibility(LAYER_HEATMAP, visible = true)
                 setLayerVisibility(LAYER_CLUSTER_BG, visible = false)
                 setLayerVisibility(LAYER_CLUSTER_COUNT, visible = false)
-                setLayerVisibility(LAYER_DOTS, visible = false)
+                // Keep individual dots visible — heatmap opacity fades to 0 above zoom 13
+                // so dots appear naturally as the user zooms into street level.
+                setLayerVisibility(LAYER_DOTS, visible = true)
                 applyHexOpacity(0.0)
-                applyMockHeatmapGridVisibilityForCurrentMode()
             }
             MapVisualizationMode.SIGNAL_DOTS -> {
-                (style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer)?.fillOpacity(0.0)
                 setLayerVisibility(LAYER_HEATMAP, visible = false)
                 setLayerVisibility(LAYER_CLUSTER_BG, visible = true)
                 setLayerVisibility(LAYER_CLUSTER_COUNT, visible = true)
@@ -425,16 +437,11 @@ class MapLayerManager(private val style: Style) {
                 applyHexOpacity(0.0)
             }
             MapVisualizationMode.COVERAGE_HEX -> {
-                (style.getLayer(LAYER_MOCK_GRID_FILL) as? FillLayer)?.fillOpacity(0.0)
                 setLayerVisibility(LAYER_HEATMAP, visible = false)
                 setLayerVisibility(LAYER_CLUSTER_BG, visible = false)
                 setLayerVisibility(LAYER_CLUSTER_COUNT, visible = false)
                 setLayerVisibility(LAYER_DOTS, visible = false)
-                if (backendHexConnected) {
-                    applyHexOpacity(0.45)
-                } else {
-                    applyHexOpacity(0.0)
-                }
+                applyHexOpacity(if (backendHexConnected) 0.45 else 0.0)
             }
         }
     }
@@ -521,11 +528,11 @@ class MapLayerManager(private val style: Style) {
     val tappableLayers: List<String> get() = listOf(LAYER_CLUSTER_BG, LAYER_DOTS)
 
     /**
-     * Fill layers for grid / hex cells — queried first on tap when the mode shows tappable polygons.
+     * Fill layers for hex cells — queried first on tap when the mode shows tappable polygons.
+     * SPEED_HEATMAP uses the real HeatmapLayer (not tappable polygons), so it returns empty.
      */
     fun polygonTapLayerIdsForCurrentMode(): List<String> = when (visualizationMode) {
-        MapVisualizationMode.SPEED_HEATMAP ->
-            if (mockHeatmapGridLoaded) listOf(LAYER_MOCK_GRID_FILL) else emptyList()
+        MapVisualizationMode.SPEED_HEATMAP -> emptyList()
         MapVisualizationMode.COVERAGE_HEX ->
             if (backendHexConnected) listOf(LAYER_HEX_FILL) else emptyList()
         MapVisualizationMode.SIGNAL_DOTS -> emptyList()

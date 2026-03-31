@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    DL/UL gradient banner — matches CoverageMap's vivid blue → purple → pink palette.
+    Left side (Download): bright indigo-blue #3B5BDB
+    Right side (Upload):  vivid pink        #E879A0
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
         android:angle="0"
-        android:endColor="#8B3A72"
-        android:startColor="#2D4A9A"
+        android:startColor="#3B5BDB"
+        android:centerColor="#7C3AED"
+        android:endColor="#E879A0"
         android:type="linear" />
-    <corners android:radius="16dp" />
+    <corners android:radius="18dp" />
 </shape>

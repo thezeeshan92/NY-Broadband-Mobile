@@ -73,9 +73,9 @@
         <action
             android:id="@+id/action_testInProgress_to_testResult"
             app:destination="@id/testResultFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
+            app:enterAnim="@anim/fade_scale_in"
+            app:exitAnim="@anim/fade_out_quick"
+            app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out_right"
             app:popUpTo="@id/testInProgressFragment"
             app:popUpToInclusive="true" />
