@@ -6,11 +6,18 @@ import android.app.NotificationManager
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.nybroadband.mobile.service.ActiveTestService
 import com.nybroadband.mobile.service.PassiveCollectionService
+import com.nybroadband.mobile.service.SyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -23,6 +30,29 @@ class NYBroadbandApp : Application(), Configuration.Provider {
         super.onCreate()
         initLogging()
         createNotificationChannels()
+        schedulePeriodicalSync()
+    }
+
+    /**
+     * Schedule a periodic background sync every 15 minutes (WorkManager minimum).
+     * Uses KEEP policy so re-launches don't reset the timer.
+     * Requires any network connection — WorkManager defers execution until connected.
+     */
+    private fun schedulePeriodicalSync() {
+        val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .addTag(SyncWorker.TAG)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            SyncWorker.TAG,
+            ExistingPeriodicWorkPolicy.KEEP,
+            request
+        )
     }
 
     // Provide Hilt-aware WorkManager configuration.
