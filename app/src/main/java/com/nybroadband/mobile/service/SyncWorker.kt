@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -91,7 +92,7 @@ class SyncWorker @AssistedInject constructor(
                 else failed.add(entity.id)
             }
 
-            if (uploaded.isNotEmpty()) measurementRepo.markUploaded(uploaded)
+            if (uploaded.isNotEmpty()) measurementRepo.deleteAll(uploaded)
             if (failed.isNotEmpty())   measurementRepo.markFailed(failed)
 
             Timber.d("SyncWorker: measurements uploaded=${uploaded.size} rejected=${failed.size}")
@@ -111,7 +112,7 @@ class SyncWorker @AssistedInject constructor(
         pending.forEach { report ->
             try {
                 val response = api.submitDeadZone(report.toRequest(deviceId))
-                deadZoneRepo.markUploaded(report.id, response.remoteId)
+                deadZoneRepo.delete(report.id)
                 Timber.d("SyncWorker: dead zone uploaded remoteId=${response.remoteId}")
             } catch (e: Exception) {
                 Timber.e(e, "SyncWorker: dead zone upload failed id=${report.id}")
@@ -181,12 +182,13 @@ class SyncWorker @AssistedInject constructor(
 
     companion object {
         const val TAG = "SyncWorker"
+        private const val TAG_ONE_SHOT = "SyncWorkerOneShot"
         private const val BATCH_SIZE = 100
 
         /**
-         * Enqueues a one-time sync run.
-         * Requires any network connection; WorkManager handles scheduling and
-         * retries with exponential backoff if [Result.retry] is returned.
+         * Enqueues a one-time sync run that fires as soon as the device is connected.
+         * Uses unique work with KEEP policy — multiple rapid calls (e.g. saving several
+         * measurements back-to-back) collapse into a single queued job.
          */
         fun enqueue(workManager: WorkManager) {
             val request = OneTimeWorkRequestBuilder<SyncWorker>()
@@ -198,7 +200,7 @@ class SyncWorker @AssistedInject constructor(
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .addTag(TAG)
                 .build()
-            workManager.enqueue(request)
+            workManager.enqueueUniqueWork(TAG_ONE_SHOT, ExistingWorkPolicy.KEEP, request)
         }
     }
 }

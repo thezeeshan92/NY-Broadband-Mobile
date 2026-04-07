@@ -2,6 +2,7 @@ package com.nybroadband.mobile.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.work.WorkManager
 import com.nybroadband.mobile.data.local.db.AppDatabase
 import com.nybroadband.mobile.data.local.db.AppDatabase.Companion.MIGRATION_1_2
 import com.nybroadband.mobile.data.local.db.AppDatabase.Companion.MIGRATION_2_3
@@ -66,4 +67,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideMoshi(): Moshi = Moshi.Builder().build()
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
+        WorkManager.getInstance(context)
 }

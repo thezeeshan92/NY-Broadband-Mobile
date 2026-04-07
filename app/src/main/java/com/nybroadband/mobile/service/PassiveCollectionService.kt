@@ -10,6 +10,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import com.nybroadband.mobile.R
+import androidx.work.WorkManager
 import com.nybroadband.mobile.data.local.db.dao.MeasurementDao
 import com.nybroadband.mobile.data.local.db.dao.SyncQueueDao
 import com.nybroadband.mobile.data.local.db.entity.SyncQueueEntity
@@ -68,6 +69,7 @@ class PassiveCollectionService : LifecycleService() {
     @Inject lateinit var assembler: SampleAssembler
     @Inject lateinit var measurementDao: MeasurementDao
     @Inject lateinit var syncQueueDao: SyncQueueDao
+    @Inject lateinit var workManager: WorkManager
 
     // Coroutine scope for the sampling loop — cancelled in onDestroy
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -177,6 +179,9 @@ class PassiveCollectionService : LifecycleService() {
                 nextAttemptMs  = measurement.timestamp   // eligible for upload immediately
             )
         )
+
+        // Trigger an immediate upload attempt (unique work — multiple samples collapse into one job)
+        SyncWorker.enqueue(workManager)
 
         _status.value = if (signal.isNoService) CollectionStatus.NO_SERVICE
                         else CollectionStatus.MEASURING

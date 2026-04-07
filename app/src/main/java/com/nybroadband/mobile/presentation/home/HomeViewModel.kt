@@ -2,8 +2,14 @@ package com.nybroadband.mobile.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
 import com.nybroadband.mobile.data.local.db.dao.MapPointProjection
 import com.nybroadband.mobile.data.local.db.dao.MeasurementDao
+import com.nybroadband.mobile.data.remote.NyuBroadbandApi
+import com.nybroadband.mobile.data.remote.model.CoverageCell
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +21,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.math.cos
+import kotlin.math.sin
 
 // ---------------------------------------------------------------------------
 // UI State
@@ -59,6 +68,17 @@ enum class CollectionStatus(val label: String) {
 }
 
 // ---------------------------------------------------------------------------
+// Coverage hex state
+// ---------------------------------------------------------------------------
+
+sealed interface CoverageHexUiState {
+    data object Idle : CoverageHexUiState
+    data object Loading : CoverageHexUiState
+    data class Loaded(val collection: FeatureCollection) : CoverageHexUiState
+    data class Error(val message: String) : CoverageHexUiState
+}
+
+// ---------------------------------------------------------------------------
 // One-time UI events  (ViewModel → Fragment via Channel)
 // ---------------------------------------------------------------------------
 
@@ -76,7 +96,8 @@ sealed interface HomeUiEvent {
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val measurementDao: MeasurementDao
+    private val measurementDao: MeasurementDao,
+    private val api: NyuBroadbandApi
 ) : ViewModel() {
 
     // ── Map points ──────────────────────────────────────────────────────────
@@ -89,31 +110,106 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    /** Toolbar + filter sheet settings; drives [mapPointsForDisplay] with mock data when enabled. */
+    /** Toolbar + filter sheet settings; drives [mapPointsForDisplay]. */
     private val _mapFilterState = MutableStateFlow(MapFilterState())
     val mapFilterState: StateFlow<MapFilterState> = _mapFilterState.asStateFlow()
 
     /**
-     * Points sent to Mapbox after applying [mapFilterState] (merges mock measurements when [MapMockConfig.ENABLED]).
+     * Points sent to Mapbox after applying [mapFilterState].
      *
      * Uses [SharingStarted.Lazily] so leaving the map tab does not reset to [emptyList] after the
      * WhileSubscribed timeout — that was clearing the GeoJSON source while Signal Strength showed no dots.
-     * When mocks are on, [initialValue] matches a zero-DB filter pass so the first read is never empty.
      */
     val mapPointsForDisplay: StateFlow<List<MapPointProjection>> = combine(
         measurementDao.observeMapPoints(),
         _mapFilterState,
-    ) { real, filters ->
-        MapMockData.combineAndFilter(real, filters)
+    ) { real, _ ->
+        real
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Lazily,
-        initialValue = if (MapMockConfig.ENABLED) {
-            MapMockData.combineAndFilter(emptyList(), MapFilterState())
-        } else {
-            emptyList()
-        },
+        initialValue = emptyList(),
     )
+
+    // ── Coverage hex ─────────────────────────────────────────────────────────
+
+    private val _coverageHexState = MutableStateFlow<CoverageHexUiState>(CoverageHexUiState.Idle)
+    val coverageHexState: StateFlow<CoverageHexUiState> = _coverageHexState.asStateFlow()
+
+    /**
+     * Fetches coverage hex cells from the API and converts them to a Mapbox-ready FeatureCollection.
+     * Each [CoverageCell] is approximated as a hexagonal polygon around its centroid — no H3 library needed.
+     * Idempotent: a second call while loading is a no-op.
+     */
+    fun loadCoverageHex(
+        resolution: Int = 7,
+        carrier: String? = null,
+        networkType: String? = null
+    ) {
+        if (_coverageHexState.value is CoverageHexUiState.Loading) return
+        viewModelScope.launch {
+            _coverageHexState.value = CoverageHexUiState.Loading
+            try {
+                val response = api.getCoverageHex(
+                    resolution  = resolution,
+                    carrier     = carrier,
+                    networkType = networkType
+                )
+                val features = response.cells.map { cell -> coverageCellToFeature(cell, resolution) }
+                val collection = FeatureCollection.fromFeatures(features)
+                _coverageHexState.value = CoverageHexUiState.Loaded(collection)
+                Timber.i("Coverage hex loaded: ${features.size} cells")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load coverage hex")
+                _coverageHexState.value = CoverageHexUiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    // ── Coverage hex helpers ─────────────────────────────────────────────────
+
+    private fun coverageCellToFeature(cell: CoverageCell, resolution: Int): Feature {
+        // Approximate H3 hex as a regular hexagon from centroid.
+        // H3 resolution 7 circumradius ≈ 1.4 km ≈ 0.0126°;
+        // H3 resolution 9 circumradius ≈ 0.2 km ≈ 0.0018°.
+        val radiusDegLat = if (resolution <= 7) 0.013 else 0.002
+        val ring = hexRing(cell.centroidLat, cell.centroidLon, radiusDegLat)
+        val score = signalTierToScore(cell.signalTier)
+        return Feature.fromGeometry(Polygon.fromLngLats(listOf(ring))).apply {
+            addNumberProperty("signalScore", score)
+            addStringProperty("signalTier", cell.signalTier)
+            addStringProperty("dominantCarrier", cell.dominantCarrier)
+            addStringProperty("dominantNetworkType", cell.dominantNetworkType)
+            addNumberProperty("measurementCount", cell.measurementCount)
+            cell.avgDownloadMbps?.let { addNumberProperty("avgDl", it) }
+            cell.avgUploadMbps?.let  { addNumberProperty("avgUl", it) }
+            cell.avgRsrp?.let        { addNumberProperty("avgRsrp", it) }
+        }
+    }
+
+    /** Pointy-top regular hexagon vertices (6 + closing point) around [lat]/[lon]. */
+    private fun hexRing(lat: Double, lon: Double, radiusDegLat: Double): List<Point> {
+        val lonScale = cos(Math.toRadians(lat)).coerceAtLeast(0.001)
+        val radiusDegLon = radiusDegLat / lonScale
+        val vertices = (0 until 6).map { i ->
+            val angle = Math.toRadians(60.0 * i)   // 0° = north vertex
+            Point.fromLngLat(
+                lon + radiusDegLon * sin(angle),
+                lat + radiusDegLat * cos(angle)
+            )
+        }
+        return vertices + vertices[0]   // close the GeoJSON ring
+    }
+
+    private fun signalTierToScore(tier: String): Double = when (tier.uppercase()) {
+        "GOOD" -> 1.00
+        "FAIR" -> 0.75
+        "WEAK" -> 0.40
+        "POOR" -> 0.15
+        else   -> 0.05
+    }
+
+    // ── Filter helpers ────────────────────────────────────────────────────────
 
     fun resetMapFilter() {
         _mapFilterState.value = MapFilterState()
@@ -164,16 +260,12 @@ class HomeViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
-        // Shell: emit Ready immediately.
-        // Real: check permission status, observe PassiveCollectionService binder.
         _uiState.value = HomeUiState.Ready()
     }
 
     // ── Public API called by Fragment ────────────────────────────────────────
 
     fun onLocationPermissionGranted() {
-        // Transition from any non-Ready state (Loading or LocationPermissionRequired).
-        // A no-op when already Ready so repeated calls on onResume are harmless.
         if (_uiState.value !is HomeUiState.Ready) {
             _uiState.value = HomeUiState.Ready()
         }
@@ -193,7 +285,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ── Callbacks from bound services (future wiring) ────────────────────────
+    // ── Callbacks from bound services ────────────────────────────────────────
 
     /** PassiveCollectionService binder callback. */
     fun onCollectionStatusChanged(status: CollectionStatus) {

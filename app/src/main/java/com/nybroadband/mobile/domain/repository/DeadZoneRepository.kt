@@ -28,4 +28,6 @@ interface DeadZoneRepository {
     suspend fun markUploaded(id: String, remoteId: String)
 
     suspend fun markFailed(ids: List<String>)
+
+    suspend fun delete(id: String)
 }

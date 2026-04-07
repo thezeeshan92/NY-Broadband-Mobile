@@ -66,6 +66,9 @@ class DeadZoneRepositoryImpl @Inject constructor(
     override suspend fun markFailed(ids: List<String>) =
         deadZoneDao.markFailed(ids)
 
+    override suspend fun delete(id: String) =
+        deadZoneDao.deleteById(id)
+
     companion object {
         /** Matches SyncQueueEntity.entityType value for dead zone records. */
         const val ENTITY_TYPE = "DEAD_ZONE"

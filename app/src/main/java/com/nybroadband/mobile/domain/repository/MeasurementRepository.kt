@@ -49,4 +49,6 @@ interface MeasurementRepository {
     suspend fun markUploaded(ids: List<String>)
 
     suspend fun markFailed(ids: List<String>)
+
+    suspend fun deleteAll(ids: List<String>)
 }

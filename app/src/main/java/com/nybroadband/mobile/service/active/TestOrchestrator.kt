@@ -2,6 +2,7 @@ package com.nybroadband.mobile.service.active
 
 import android.content.Context
 import android.os.Build
+import androidx.work.WorkManager
 import com.nybroadband.mobile.data.local.db.dao.MeasurementDao
 import com.nybroadband.mobile.data.local.db.dao.SyncQueueDao
 import com.nybroadband.mobile.data.local.db.entity.MeasurementEntity
@@ -14,6 +15,7 @@ import com.nybroadband.mobile.domain.model.RawTestResult
 import com.nybroadband.mobile.domain.model.TestConfig
 import com.nybroadband.mobile.domain.repository.SyncRepository
 import com.nybroadband.mobile.engine.SpeedTestEngine
+import com.nybroadband.mobile.service.SyncWorker
 import com.nybroadband.mobile.service.location.LocationReader
 import com.nybroadband.mobile.service.signal.SignalReader
 import com.nybroadband.mobile.service.signal.SignalSnapshot
@@ -56,6 +58,7 @@ class TestOrchestrator @Inject constructor(
     private val locationReader: LocationReader,
     private val measurementDao: MeasurementDao,
     private val syncQueueDao: SyncQueueDao,
+    private val workManager: WorkManager,
     @ApplicationContext private val context: Context
 ) {
     private val appVersion: String by lazy {
@@ -112,6 +115,9 @@ class TestOrchestrator @Inject constructor(
                                 nextAttemptMs = measurement.timestamp
                             )
                         )
+
+                        // Trigger an immediate upload attempt (fires as soon as network is available)
+                        SyncWorker.enqueue(workManager)
 
                         Timber.i(
                             "TestOrchestrator: saved ${measurement.id} " +

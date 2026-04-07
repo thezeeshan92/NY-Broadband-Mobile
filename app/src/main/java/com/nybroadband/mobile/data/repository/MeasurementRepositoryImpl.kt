@@ -68,6 +68,9 @@ class MeasurementRepositoryImpl @Inject constructor(
     override suspend fun markFailed(ids: List<String>) =
         measurementDao.markFailed(ids)
 
+    override suspend fun deleteAll(ids: List<String>) =
+        measurementDao.deleteAll(ids)
+
     private suspend fun enqueue(id: String) {
         val now = System.currentTimeMillis()
         syncQueueDao.enqueue(

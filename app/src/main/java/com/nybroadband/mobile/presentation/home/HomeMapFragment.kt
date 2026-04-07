@@ -80,9 +80,7 @@ class HomeMapFragment : Fragment() {
     private var layerManager: MapLayerManager? = null
 
     private var layerPanelVisible = false
-    private var mapVisualizationMode: MapVisualizationMode =
-        if (MapMockConfig.ENABLED) MapVisualizationMode.SPEED_HEATMAP
-        else MapVisualizationMode.SIGNAL_DOTS
+    private var mapVisualizationMode: MapVisualizationMode = MapVisualizationMode.SIGNAL_DOTS
 
     // Tracks whether user returned from app Settings so onResume can re-check.
     private var awaitingSettingsReturn = false
@@ -249,32 +247,24 @@ class HomeMapFragment : Fragment() {
         mapboxMap = binding.mapView.mapboxMap
         setupMapZoomLimits()
 
-        if (MapMockConfig.ENABLED) {
-            mapboxMap.setCamera(
-                CameraOptions.Builder()
-                    .center(Point.fromLngLat(MOCK_DEFAULT_LON, MOCK_DEFAULT_LAT))
-                    .zoom(MOCK_DEFAULT_ZOOM)
-                    .build()
-            )
-        } else {
-            mapboxMap.setCamera(
-                CameraOptions.Builder()
-                    .center(Point.fromLngLat(DEFAULT_LON, DEFAULT_LAT))
-                    .zoom(DEFAULT_ZOOM)
-                    .build()
-            )
-        }
+        mapboxMap.setCamera(
+            CameraOptions.Builder()
+                .center(Point.fromLngLat(DEFAULT_LON, DEFAULT_LAT))
+                .zoom(DEFAULT_ZOOM)
+                .build()
+        )
 
         val styleUri = if (isDarkMode()) Style.DARK else Style.LIGHT
         mapboxMap.loadStyle(styleUri) { style ->
             mapStyleReady = true
             layerManager = MapLayerManager(style).also { lm ->
-                if (MapMockConfig.ENABLED) {
-                    lm.loadMockHexFeatureCollection(MapMockData.mockCoverageHexCollection())
-                    lm.loadMockHeatmapGrid(MapMockData.mockUsCentralGridHeatmap())
-                }
                 lm.setVisualizationMode(mapVisualizationMode)
                 applyLatestMapPoints(lm)
+                // If coverage hex was already loaded before the style became ready, apply now.
+                val hexState = viewModel.coverageHexState.value
+                if (hexState is CoverageHexUiState.Loaded) {
+                    lm.loadMockHexFeatureCollection(hexState.collection)
+                }
             }
             setupMapTapListener()
             if (hasLocationPermission()) enableLocationPuck()
@@ -442,6 +432,9 @@ class HomeMapFragment : Fragment() {
             if (mode == MapVisualizationMode.SIGNAL_DOTS) {
                 layerManager?.updateLocalPoints(viewModel.mapPointsForDisplay.value)
             }
+        }
+        if (mode == MapVisualizationMode.COVERAGE_HEX) {
+            viewModel.loadCoverageHex()
         }
         updateLayerCardSelection()
     }
@@ -678,6 +671,14 @@ class HomeMapFragment : Fragment() {
 
                             HomeUiEvent.RequestLocationPermission ->
                                 requestLocationPermission()
+                        }
+                    }
+                }
+
+                launch {
+                    viewModel.coverageHexState.collect { state ->
+                        if (state is CoverageHexUiState.Loaded && mapStyleReady) {
+                            layerManager?.loadMockHexFeatureCollection(state.collection)
                         }
                     }
                 }

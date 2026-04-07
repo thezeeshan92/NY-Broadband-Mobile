@@ -59,6 +59,9 @@ interface MeasurementDao {
     @Query("UPDATE measurements SET uploadStatus = 'FAILED', uploadAttempts = uploadAttempts + 1 WHERE id IN (:ids)")
     suspend fun markFailed(ids: List<String>)
 
+    @Query("DELETE FROM measurements WHERE id IN (:ids)")
+    suspend fun deleteAll(ids: List<String>)
+
     /** Monthly data usage for cap enforcement. Returns 0 if no records. */
     @Query("""
         SELECT COALESCE(SUM(COALESCE(bytesDownloaded, 0) + COALESCE(bytesUploaded, 0)), 0)

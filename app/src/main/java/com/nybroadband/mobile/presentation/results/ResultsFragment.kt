@@ -61,6 +61,11 @@ class ResultsFragment : Fragment() {
         observeState()
     }
 
+    override fun onStart() {
+        super.onStart()
+        viewModel.refresh()
+    }
+
     // ── RecyclerView ──────────────────────────────────────────────────────────
 
     private fun setupRecyclerView() {

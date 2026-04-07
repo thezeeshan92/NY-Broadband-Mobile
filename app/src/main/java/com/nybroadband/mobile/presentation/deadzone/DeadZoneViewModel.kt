@@ -6,7 +6,10 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nybroadband.mobile.data.DeviceManager
 import com.nybroadband.mobile.data.local.db.entity.DeadZoneReportEntity
+import com.nybroadband.mobile.data.remote.NyuBroadbandApi
+import com.nybroadband.mobile.data.remote.model.CreateDeadZoneRequest
 import com.nybroadband.mobile.domain.repository.DeadZoneRepository
 import com.nybroadband.mobile.service.location.LocationReader
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -84,6 +88,8 @@ sealed interface DeadZoneEvent {
 class DeadZoneViewModel @Inject constructor(
     private val repository: DeadZoneRepository,
     private val locationReader: LocationReader,
+    private val api: NyuBroadbandApi,
+    private val deviceManager: DeviceManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -180,7 +186,24 @@ class DeadZoneViewModel @Inject constructor(
                 appVersion       = appVersion ?: "unknown"
             )
 
+            // Always persist locally first — guarantees offline safety.
             repository.submit(report)
+
+            // If online: attempt immediate upload and delete the local record on success.
+            // If offline or upload fails: the record stays PENDING and SyncWorker will retry.
+            if (state.isOnline) {
+                val deviceId = deviceManager.ensureRegistered()
+                if (deviceId != null) {
+                    try {
+                        api.submitDeadZone(report.toApiRequest(deviceId))
+                        repository.delete(report.id)
+                        Timber.i("DeadZone: uploaded and removed from local DB id=${report.id}")
+                    } catch (e: Exception) {
+                        Timber.w(e, "DeadZone: immediate upload failed — SyncWorker will retry id=${report.id}")
+                    }
+                }
+            }
+
             _events.send(DeadZoneEvent.SubmitSuccess(isOnline = state.isOnline))
         }
     }
@@ -193,4 +216,15 @@ class DeadZoneViewModel @Inject constructor(
         val caps = cm.getNetworkCapabilities(network) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
+
+    private fun DeadZoneReportEntity.toApiRequest(deviceId: String) = CreateDeadZoneRequest(
+        deviceId          = deviceId,
+        lat               = lat,
+        lon               = lon,
+        gpsAccuracyMeters = gpsAccuracyMeters.toDouble().takeIf { it > 0 },
+        note              = note,
+        photoCount        = photoUris?.split("|")?.filter { it.isNotBlank() }?.size ?: 0,
+        timestamp         = java.time.Instant.ofEpochMilli(timestamp)
+                               .toString()   // ISO-8601
+    )
 }

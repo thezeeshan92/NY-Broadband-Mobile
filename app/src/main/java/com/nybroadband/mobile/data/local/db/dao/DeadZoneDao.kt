@@ -55,4 +55,7 @@ interface DeadZoneDao {
 
     @Delete
     suspend fun delete(report: DeadZoneReportEntity)
+
+    @Query("DELETE FROM dead_zone_reports WHERE id = :id")
+    suspend fun deleteById(id: String)
 }
