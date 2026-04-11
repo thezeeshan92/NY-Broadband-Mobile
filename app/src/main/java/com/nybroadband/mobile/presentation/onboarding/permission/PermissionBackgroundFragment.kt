@@ -1,12 +1,9 @@
 package com.nybroadband.mobile.presentation.onboarding.permission
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,20 +23,18 @@ import dagger.hilt.android.AndroidEntryPoint
  * Requests ACCESS_BACKGROUND_LOCATION — shown only on API 29+ (see nav_onboarding.xml).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * Android version differences — critical:
+ * Android version differences:
  *
  *  API 29 (Android 10):
- *    • ACCESS_BACKGROUND_LOCATION was introduced.
- *    • MUST be requested in a separate call — bundling with FINE/COARSE silently drops it.
- *    • System shows a standard dialog with "Allow all the time" / "Allow only while using"
- *      / "Deny". Selecting "Allow all the time" grants background access.
+ *    • System shows a standard permission dialog with "Allow all the time" / "Allow only
+ *      while using" / "Deny".
  *
  *  API 30+ (Android 11+):
- *    • requestPermissions() for BACKGROUND_LOCATION NO LONGER shows a dialog.
- *      The call is silently ignored — Android forces the user to grant via Settings.
- *    • Our UX: show an explanation card and a "Open Location Settings" button.
- *    • We detect the return from Settings in onResume() using a flag.
+ *    • requestPermissions() triggers an OS-managed interstitial that routes the user to
+ *      the app's specific Location permission settings page — more targeted than opening
+ *      the general app settings manually.
  *
+ * Both paths use the same permissionLauncher; the OS handles the appropriate UX per version.
  * ─────────────────────────────────────────────────────────────────────────────
  * On success or skip: navigate to permissionPhoneStateFragment.
  */
@@ -50,9 +45,6 @@ class PermissionBackgroundFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: OnboardingViewModel by activityViewModels()
-
-    // Set to true after we open Settings, so onResume() knows to re-check
-    private var awaitingSettingsReturn = false
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private val permissionLauncher = registerForActivityResult(
@@ -83,37 +75,15 @@ class PermissionBackgroundFragment : Fragment() {
             return
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // API 30+: no dialog — must go to Settings
-            binding.tvBody.text = getString(R.string.perm_background_body_v30)
-            binding.settingsNote.isVisible = true
-            binding.btnAllow.text = getString(R.string.perm_background_open_settings)
-            binding.btnAllow.setOnClickListener { openLocationSettings() }
-        } else {
-            // API 29: standard permission dialog available
-            binding.tvBody.text = getString(R.string.perm_background_body)
-            binding.settingsNote.isVisible = false
-            binding.btnAllow.text = getString(R.string.perm_background_allow)
-            binding.btnAllow.setOnClickListener {
-                permissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
+        // On all supported API levels (29+), launch the permission request directly.
+        // API 29: shows the standard dialog.
+        // API 30+: OS shows its own interstitial and routes to the app's location settings.
+        binding.settingsNote.isVisible = false
+        binding.btnAllow.setOnClickListener {
+            permissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
 
         binding.tvSkip.setOnClickListener { navigateNext() }
-    }
-
-    /**
-     * Called when the user returns from the system Settings screen (API 30+ path).
-     * We re-check the permission and navigate forward automatically if granted.
-     */
-    @RequiresApi(Build.VERSION_CODES.Q)
-    override fun onResume() {
-        super.onResume()
-        if (awaitingSettingsReturn) {
-            awaitingSettingsReturn = false
-            // Navigate whether granted or not — user has made their choice
-            navigateNext()
-        }
     }
 
     private fun navigateNext() {
@@ -125,19 +95,6 @@ class PermissionBackgroundFragment : Fragment() {
         ContextCompat.checkSelfPermission(
             requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-
-    /**
-     * Opens the app's location permission settings page.
-     * This is the only way to grant background location on API 30+.
-     */
-    private fun openLocationSettings() {
-        awaitingSettingsReturn = true
-        startActivity(
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", requireContext().packageName, null)
-            }
-        )
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

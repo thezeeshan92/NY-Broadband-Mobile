@@ -15,7 +15,10 @@
       "Read(//c/Program Files/Google/Chrome/Application/**)",
       "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
       "Bash(/c/Users/pakex/AppData/Roaming/npm/md-to-pdf --launch-options '{\"executablePath\":\"C:\\\\\\\\Program Files\\\\\\\\Google\\\\\\\\Chrome\\\\\\\\Application\\\\\\\\chrome.exe\"}' \"/d/Personal Data/Enabers/NYU Broadband Mobile Application/NYU Broadband Mobile Application/NYBroadbandMobile/docs/backend-hld.md\" 2>&1)",
-      "Bash(/c/Users/pakex/AppData/Roaming/npm/md-to-pdf --launch-options \"{\\\\\"executablePath\\\\\":\\\\\"C:/Program Files/Google/Chrome/Application/chrome.exe\\\\\"}\" \"/d/Personal Data/Enabers/NYU Broadband Mobile Application/NYU Broadband Mobile Application/NYBroadbandMobile/docs/backend-hld.md\" 2>&1)"
+      "Bash(/c/Users/pakex/AppData/Roaming/npm/md-to-pdf --launch-options \"{\\\\\"executablePath\\\\\":\\\\\"C:/Program Files/Google/Chrome/Application/chrome.exe\\\\\"}\" \"/d/Personal Data/Enabers/NYU Broadband Mobile Application/NYU Broadband Mobile Application/NYBroadbandMobile/docs/backend-hld.md\" 2>&1)",
+      "Bash(python3 -c ':*)",
+      "Bash(./gradlew assembleDebug --no-daemon)",
+      "Bash(grep:*)"
     ]
   }
 }

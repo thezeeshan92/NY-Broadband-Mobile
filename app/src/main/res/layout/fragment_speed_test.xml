@@ -1,92 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Speed Test tab — CoverageMap.com–style launcher screen.
-    Dark background, large gradient "Start Test" circle, context tabs, location row.
+    Speed Test tab — 2025 redesign.
+    Dark premium background, pulse-ring CTA, network badge, location above CTA.
+    All original view IDs are preserved for SpeedTestFragment.kt compatibility.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0E0E1A"
+    android:background="@color/ds_bg"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <!-- ── TOP SECTION: carrier info + big circle button ─────────────────── -->
+    <!-- ── TOP: Network identity row ───────────────────────────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingTop="24dp">
+        android:paddingTop="20dp"
+        android:paddingHorizontal="20dp">
 
-        <!-- Carrier / ISP name -->
-        <TextView
-            android:id="@+id/tvCarrierName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            tools:text="Verizon Wireless" />
-
-        <!-- Device + connection type row -->
+        <!-- Network type badge pill -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_ds_network_badge"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp">
 
             <ImageView
                 android:id="@+id/ivConnectionIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_wifi_24"
-                app:tint="#9CA3AF" />
+                app:tint="@color/ds_accent_blue" />
 
             <TextView
                 android:id="@+id/tvDeviceInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:textColor="#9CA3AF"
-                android:textSize="13sp"
-                tools:text="Pixel 7 · Wi-Fi" />
+                android:layout_marginStart="5dp"
+                android:textColor="@color/ds_accent_blue"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.04"
+                tools:text="Wi-Fi · Pixel 7" />
+
         </LinearLayout>
 
-        <!-- ── CENTER: big gradient circle ───────────────────────────────── -->
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
+        <!-- Carrier name — main identity label -->
+        <TextView
+            android:id="@+id/tvCarrierName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/ds_text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.01"
+            tools:text="Verizon Wireless" />
+
+    </LinearLayout>
+
+    <!-- ── LOCATION ROW (above CTA) ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="14dp"
+        android:visibility="gone"
+        android:background="@drawable/bg_ds_location_row"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@null"
+            android:src="@drawable/flag_us_badge" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:gravity="center">
+            android:orientation="vertical">
 
-            <!-- Outer glow ring -->
-            <View
-                android:layout_width="220dp"
-                android:layout_height="220dp"
-                android:layout_gravity="center"
-                android:alpha="0.18"
-                android:background="@drawable/bg_start_test_gradient" />
-
-            <!-- Tappable Start Test button -->
             <TextView
-                android:id="@+id/btnStartTest"
-                android:layout_width="190dp"
-                android:layout_height="190dp"
-                android:layout_gravity="center"
-                android:background="@drawable/bg_start_test_gradient"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="@string/speed_start_test"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp"
+                android:id="@+id/tvLocationName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/speed_location_default"
+                android:textColor="@color/ds_text_primary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
-        </FrameLayout>
+
+            <TextView
+                android:id="@+id/tvLocationSub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/speed_location_sub"
+                android:textColor="@color/ds_text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvLocationChange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/speed_location_change"
+            android:textColor="@color/ds_accent"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginStart="2dp"
+            android:contentDescription="@null"
+            android:rotation="180"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/ds_accent" />
+
+    </LinearLayout>
+
+    <!-- ── CENTER: pulse rings + CTA button ─────────────────────────────────── -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center">
+
+        <!-- Outermost pulse ring (largest, most faint) -->
+        <View
+            android:id="@+id/pulseRing3"
+            android:layout_width="264dp"
+            android:layout_height="264dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_ds_pulse_ring_3" />
+
+        <!-- Middle pulse ring -->
+        <View
+            android:id="@+id/pulseRing2"
+            android:layout_width="228dp"
+            android:layout_height="228dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_ds_pulse_ring_2" />
+
+        <!-- Inner pulse ring -->
+        <View
+            android:id="@+id/pulseRing1"
+            android:layout_width="196dp"
+            android:layout_height="196dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_ds_pulse_ring_1" />
+
+        <!-- Tappable Start Test button -->
+        <TextView
+            android:id="@+id/btnStartTest"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_ds_cta_gradient"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.1"
+            android:text="@string/speed_start_test"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </FrameLayout>
+
+    <!-- "Tap to start" hint -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="6dp"
+        android:gravity="center"
+        android:text="@string/speed_tap_hint"
+        android:textColor="@color/ds_text_muted"
+        android:textSize="12sp"
+        android:letterSpacing="0.03" />
+
+    <!-- ── BOTTOM: Run Multiple + context tabs + icon row ───────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="90dp">
 
         <!-- Run Multiple Tests pill -->
         <com.google.android.material.button.MaterialButton
@@ -94,39 +206,30 @@
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="14dp"
             android:text="@string/speed_run_multiple"
-            android:textColor="#CCCCCC"
-            app:strokeColor="#44FFFFFF" />
+            android:textColor="@color/ds_text_secondary"
+            android:textSize="13sp"
+            app:strokeColor="@color/ds_divider"
+            app:cornerRadius="20dp" />
 
-    </LinearLayout>
 
-    <!-- ── BOTTOM SECTION: icons, tabs, location ─────────────────────────── -->
-    <!-- paddingBottom=64dp accounts for the BottomNavigationView (56dp) + gap -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="90dp">
-
-        <!-- Gear icon (left) + Signal icon (right) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp">
+            android:padding="16dp">
 
             <ImageButton
                 android:id="@+id/btnSpeedSettings"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/bg_circle_dark"
+                android:background="@drawable/bg_ds_card_sm"
                 android:contentDescription="@string/settings_title"
                 android:padding="10dp"
                 android:src="@drawable/ic_settings"
-                app:tint="@color/white" />
+                app:tint="@color/ds_text_secondary" />
 
             <Space
                 android:layout_width="0dp"
@@ -137,11 +240,11 @@
                 android:id="@+id/btnSignalInfo"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/bg_circle_dark"
+                android:background="@drawable/bg_ds_card_sm"
                 android:contentDescription="@string/cellular_section_connection"
                 android:padding="10dp"
                 android:src="@drawable/ic_cellular"
-                app:tint="@color/white" />
+                app:tint="@color/ds_text_secondary" />
 
         </LinearLayout>
 
@@ -151,131 +254,69 @@
             android:layout_height="wrap_content"
             android:clipToPadding="false"
             android:overScrollMode="never"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:padding="16dp"
             android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/tabIndoors"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_speed_context_tab_selected"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_ds_tab_selected"
                     android:gravity="center"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:text="@string/speed_context_indoors"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tabOutdoors"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_ds_tab_unselected"
                     android:gravity="center"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:text="@string/speed_context_outdoors"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp" />
+                    android:textColor="@color/ds_text_secondary"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tabDriving"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_ds_tab_unselected"
                     android:gravity="center"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:text="@string/speed_context_driving"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp" />
+                    android:textColor="@color/ds_text_secondary"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tabOther"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:background="@drawable/bg_speed_context_tab_unselected"
+                    android:layout_height="34dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_ds_tab_unselected"
                     android:gravity="center"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
                     android:text="@string/speed_context_other"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp" />
+                    android:textColor="@color/ds_text_secondary"
+                    android:textSize="13sp" />
 
             </LinearLayout>
         </HorizontalScrollView>
-
-        <!-- Location row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/bg_speed_dark_surface"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
-
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:contentDescription="@null"
-                android:src="@drawable/flag_us_badge" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvLocationName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/speed_location_default"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvLocationSub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/speed_location_sub"
-                    android:textColor="#7777AA"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvLocationChange"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/speed_location_change"
-                android:textColor="#4FC3F7"
-                android:textSize="13sp" />
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:contentDescription="@null"
-                android:rotation="180"
-                android:src="@drawable/ic_arrow_back"
-                app:tint="#4FC3F7" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

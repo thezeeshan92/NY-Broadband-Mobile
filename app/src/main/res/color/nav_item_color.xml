@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bottom navigation icon/label tint selector.
+    Active:   #A78BFA — soft purple, ties to the primary gradient.
+    Inactive: #4A5568 — cool grey, recedes into the dark background cleanly.
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true"  android:color="#A78BFA" />
+    <item android:color="#4A5568" />
+</selector>

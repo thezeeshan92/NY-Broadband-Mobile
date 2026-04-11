@@ -1,37 +1,35 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-    Test Result — CoverageMap dark style
-    ─────────────────────────────────────────────────────────────────────
-    View IDs kept in strict sync with TestResultFragment.kt.
-    If you rename an ID here, update the Fragment too.
-
-    contentGroup:   wraps everything below the header (hidden during Loading).
-    layoutAdvanced: Technical details panel, gone by default.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Test Result — 2025 redesign.
+    All original view IDs preserved for TestResultFragment.kt.
+    New additions: tvInterpretation (static interpretation card), btnShare.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0E0E1A"
+    android:background="@color/ds_bg"
     android:orientation="vertical">
 
-    <!-- ── Header: back  |  carrier + device  |  tier badge ─────────────── -->
+    <!-- ── Header: back | carrier + device | tier badge ─────────────────── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp">
+        android:paddingHorizontal="12dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp">
 
         <ImageButton
             android:id="@+id/btnClose"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_ds_card_sm"
             android:contentDescription="@string/cd_back"
+            android:padding="10dp"
             android:src="@drawable/ic_arrow_back"
-            app:tint="#FFFFFF" />
+            app:tint="@color/ds_text_primary" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -45,7 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="--"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/ds_text_primary"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
@@ -54,27 +52,27 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="--"
-                android:textColor="#AAAAAA"
+                android:textColor="@color/ds_text_secondary"
                 android:textSize="12sp" />
 
         </LinearLayout>
 
-        <!-- Tier pill — background tinted in code via setBackgroundTintList -->
+        <!-- Tier pill — background tinted in code -->
         <TextView
             android:id="@+id/tvTierBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_speed_context_tab_selected"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="6dp"
+            android:background="@drawable/bg_ds_tab_selected"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="5dp"
             android:text="--"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
     </LinearLayout>
 
-    <!-- ─────────────────────── contentGroup ───────────────────────────── -->
+    <!-- ─────────────────────── contentGroup ─────────────────────────────── -->
     <LinearLayout
         android:id="@+id/contentGroup"
         android:layout_width="match_parent"
@@ -95,17 +93,17 @@
                 android:paddingHorizontal="16dp"
                 android:paddingBottom="16dp">
 
-                <!-- ── Sub-label (speed test · 4G LTE / dead zone / passive) -->
+                <!-- Sub-label (speed test · 4G LTE / passive / dead zone) -->
                 <TextView
                     android:id="@+id/tvTierSubLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:text="--"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/ds_text_secondary"
                     android:textSize="12sp" />
 
-                <!-- ── DL / UL gradient banner ──────────────────────────── -->
+                <!-- ── DL / UL gradient banner ─────────────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -113,7 +111,7 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingHorizontal="20dp"
-                    android:paddingVertical="18dp">
+                    android:paddingVertical="20dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -128,22 +126,24 @@
                             android:layout_height="wrap_content"
                             android:text="--"
                             android:textColor="#FFFFFF"
-                            android:textSize="36sp"
-                            android:textStyle="bold" />
+                            android:textSize="42sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="-0.02" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="↓ Download Mbps"
-                            android:textColor="#CCFFFFFF"
+                            android:textColor="#CCffffff"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <View
                         android:layout_width="1dp"
-                        android:layout_height="48dp"
-                        android:background="#44FFFFFF" />
+                        android:layout_height="52dp"
+                        android:background="#33FFFFFF" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -158,21 +158,54 @@
                             android:layout_height="wrap_content"
                             android:text="--"
                             android:textColor="#FFFFFF"
-                            android:textSize="36sp"
-                            android:textStyle="bold" />
+                            android:textSize="42sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="-0.02" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="↑ Upload Mbps"
-                            android:textColor="#CCFFFFFF"
+                            android:textColor="#CCffffff"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <!-- ── Ping / Jitter / Data pills row ──────────────────── -->
+                <!-- ── Interpretation card (NEW) ──────────────────────── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_ds_interpretation"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp">
+
+                    <TextView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:gravity="center"
+                        android:text="⚡"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvInterpretation"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/result_interp_good"
+                        android:textColor="@color/ds_accent"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- ── Ping / Jitter / Data pills row ─────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -184,25 +217,26 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="5dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_settings_card"
+                        android:background="@drawable/bg_ds_card"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:paddingVertical="12dp">
+                        android:paddingVertical="14dp">
 
                         <TextView
                             android:id="@+id/tvLatencyPill"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="18sp"
+                            android:textColor="@color/ds_text_primary"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Ping (ms)"
-                            android:textColor="#AAAAAA"
+                            android:textColor="@color/ds_text_secondary"
                             android:textSize="11sp" />
 
                     </LinearLayout>
@@ -212,25 +246,26 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="5dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_settings_card"
+                        android:background="@drawable/bg_ds_card"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:paddingVertical="12dp">
+                        android:paddingVertical="14dp">
 
                         <TextView
                             android:id="@+id/tvJitterPill"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="18sp"
+                            android:textColor="@color/ds_text_primary"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Jitter (ms)"
-                            android:textColor="#AAAAAA"
+                            android:textColor="@color/ds_text_secondary"
                             android:textSize="11sp" />
 
                     </LinearLayout>
@@ -240,236 +275,87 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_settings_card"
+                        android:background="@drawable/bg_ds_card"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:paddingVertical="12dp">
+                        android:paddingVertical="14dp">
 
                         <TextView
                             android:id="@+id/tvDataUsed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="18sp"
+                            android:textColor="@color/ds_text_primary"
+                            android:textSize="20sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Data (MB)"
-                            android:textColor="#AAAAAA"
+                            android:textColor="@color/ds_text_secondary"
                             android:textSize="11sp" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <!-- ── Detail card ──────────────────────────────────────── -->
+                <!-- ── Detail card ─────────────────────────────────────── -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:background="@drawable/bg_settings_card"
+                    android:background="@drawable/bg_ds_card"
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp">
 
                     <!-- Network -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_network"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvNetworkType"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_network" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvNetworkType" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Carrier -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_carrier"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCarrierDetail"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_carrier" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvCarrierDetail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Latency -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_latency"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvLatencyValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_latency" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvLatencyValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Jitter -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_jitter"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvJitterValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_jitter" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvJitterValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Server -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_server"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvServerName"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:ellipsize="end"
-                            android:gravity="end"
-                            android:maxLines="1"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_server" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvServerName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:gravity="end" android:maxLines="1" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Duration -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_duration"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvDuration"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_duration" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvDuration" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
-
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
                     <!-- Measured at -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:paddingVertical="12dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/test_result_row_time"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvTimestamp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="#FFFFFF"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="13dp">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/test_result_row_time" android:textColor="@color/ds_text_secondary" android:textSize="14sp" />
+                        <TextView android:id="@+id/tvTimestamp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="14sp" android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -486,80 +372,74 @@
                     android:visibility="gone"
                     app:chipBackgroundColor="@color/signal_weak" />
 
-                <!-- Sync status — PENDING or FAILED only -->
+                <!-- Sync status -->
                 <TextView
                     android:id="@+id/tvSyncStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:gravity="center"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/ds_text_secondary"
                     android:textSize="12sp"
                     android:visibility="gone" />
 
-                <!-- ── Technical details toggle ────────────────────────── -->
+                <!-- Technical details toggle -->
                 <TextView
                     android:id="@+id/tvAdvancedToggle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="16dp"
                     android:background="?attr/selectableItemBackground"
                     android:gravity="center"
                     android:paddingVertical="10dp"
                     android:text="@string/result_advanced_show"
-                    android:textColor="#6C63FF"
+                    android:textColor="@color/ds_accent"
                     android:textSize="13sp" />
 
-                <!-- ── Technical details (collapsed) ─────────────────── -->
+                <!-- Technical details (collapsed) -->
                 <LinearLayout
                     android:id="@+id/layoutAdvanced"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_settings_card"
+                    android:background="@drawable/bg_ds_card"
                     android:orientation="vertical"
                     android:paddingHorizontal="16dp"
                     android:visibility="gone">
 
-                    <!-- RSRP -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_rsrp" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvRsrp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_rsrp" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvRsrp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
-                    <!-- Signal bars -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_signal_bars" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvSignalBars" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_signal_bars" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvSignalBars" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
-                    <!-- GPS accuracy -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_gps_accuracy" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvGpsAccuracy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_gps_accuracy" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvGpsAccuracy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
-                    <!-- Device -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_device" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvDevice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_device" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvDevice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:ellipsize="end" android:maxLines="1" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
-                    <!-- App version -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_app_version" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvAppVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_app_version" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvAppVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#2AFFFFFF" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/ds_divider" />
 
-                    <!-- Session ID -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="10dp">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_session_id" android:textColor="#AAAAAA" android:textSize="13sp" />
-                        <TextView android:id="@+id/tvSessionId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="middle" android:gravity="end" android:maxLines="1" android:text="--" android:textColor="#FFFFFF" android:textSize="13sp" />
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/result_adv_session_id" android:textColor="@color/ds_text_secondary" android:textSize="13sp" />
+                        <TextView android:id="@+id/tvSessionId" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="middle" android:gravity="end" android:maxLines="1" android:text="--" android:textColor="@color/ds_text_primary" android:textSize="13sp" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -567,39 +447,64 @@
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
-        <!-- ── Bottom buttons ─────────────────────────────────────────── -->
+        <!-- ── Bottom buttons: Share | Close | Test Again ──────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:paddingHorizontal="16dp"
-            android:paddingTop="12dp"
+            android:paddingTop="10dp"
             android:paddingBottom="24dp">
 
+            <!-- Share row (NEW) -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDone"
+                android:id="@+id/btnShare"
                 style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="1"
-                android:text="@string/test_btn_done"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                app:strokeColor="#444466" />
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/action_share"
+                android:textColor="@color/ds_accent"
+                android:textSize="14sp"
+                app:strokeColor="@color/ds_interp_border"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_upload_24"
+                app:iconTint="@color/ds_accent"
+                app:iconGravity="textStart" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnTestAgain"
-                style="@style/Widget.Material3.Button"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_btn_gradient"
-                android:text="@string/test_btn_again"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                app:backgroundTint="@null"
-                app:cornerRadius="26dp" />
+            <!-- Primary actions row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDone"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/test_btn_done"
+                    android:textColor="@color/ds_text_secondary"
+                    android:textSize="15sp"
+                    app:strokeColor="@color/ds_divider"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTestAgain"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_ds_cta_gradient"
+                    android:text="@string/test_btn_again"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="12dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

@@ -58,11 +58,6 @@
                 android:textColor="?attr/colorOnSurface"
                 android:lineSpacingMultiplier="1.2" />
 
-            <!--
-                Body text swapped in code:
-                  API 29: shows standard dialog text.
-                  API 30+: shows Settings-redirect text (no dialog available).
-            -->
             <TextView
                 android:id="@+id/tvBody"
                 android:layout_width="match_parent"
@@ -135,11 +130,6 @@
         android:padding="@dimen/screen_margin"
         android:paddingBottom="24dp">
 
-        <!--
-            API 29: label = "Allow Background Access" — launches permission dialog.
-            API 30+: label = "Open Location Settings" — opens system Settings directly.
-            Text is set in code.
-        -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAllow"
             android:layout_width="match_parent"

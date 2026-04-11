@@ -1,5 +1,6 @@
 package com.nybroadband.mobile.presentation.test
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -58,6 +59,7 @@ class TestResultFragment : Fragment() {
         binding.btnDone.setOnClickListener { findNavController().navigateUp() }
         binding.btnTestAgain.setOnClickListener { navigateToTestAgain() }
         binding.tvAdvancedToggle.setOnClickListener { toggleAdvanced() }
+        binding.btnShare.setOnClickListener { shareResult() }
 
         val id = arguments?.getString("measurementId") ?: ""
         viewModel.load(id)
@@ -194,6 +196,16 @@ class TestResultFragment : Fragment() {
         binding.tvSyncStatus.isVisible = showSync
         binding.tvSyncStatus.text = syncText
 
+        // ── Interpretation ────────────────────────────────────────────────────
+        val interpResId = when {
+            (m.downloadSpeedMbps ?: 0.0) >= 100.0 -> R.string.result_interp_excellent
+            (m.downloadSpeedMbps ?: 0.0) >= 25.0  -> R.string.result_interp_good
+            (m.downloadSpeedMbps ?: 0.0) >= 10.0  -> R.string.result_interp_moderate
+            (m.downloadSpeedMbps ?: 0.0) >= 3.0   -> R.string.result_interp_limited
+            else -> R.string.result_interp_poor
+        }
+        binding.tvInterpretation.setText(interpResId)
+
         // ── Advanced section ──────────────────────────────────────────────────
         binding.tvRsrp.text        = m.rsrp?.let { getString(R.string.result_adv_rsrp_fmt, it) } ?: "--"
         binding.tvSignalBars.text  = "${m.signalBars} / 4"
@@ -201,6 +213,27 @@ class TestResultFragment : Fragment() {
         binding.tvDevice.text      = m.deviceModel
         binding.tvAppVersion.text  = m.appVersion
         binding.tvSessionId.text   = m.sessionId ?: "--"
+    }
+
+    // ── Share ─────────────────────────────────────────────────────────────────
+
+    private fun shareResult() {
+        val state = (viewModel.uiState.value as? TestResultUiState.Ready)?.measurement ?: return
+        val down = state.downloadSpeedMbps?.let { "%.1f".format(it) } ?: "--"
+        val up   = state.uploadSpeedMbps?.let { "%.1f".format(it) } ?: "--"
+        val ping = state.latencyMs?.toString() ?: "--"
+        val text = "My NY Broadband speed test result:\n" +
+                "↓ Download: $down Mbps\n" +
+                "↑ Upload:   $up Mbps\n" +
+                "Ping:       $ping ms\n\n" +
+                "Tested via NY Broadband Mobile"
+        startActivity(Intent.createChooser(
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            },
+            getString(R.string.action_share)
+        ))
     }
 
     // ── Advanced toggle ───────────────────────────────────────────────────────

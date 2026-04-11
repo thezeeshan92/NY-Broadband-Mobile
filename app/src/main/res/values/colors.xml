@@ -44,7 +44,9 @@
     <!-- Bottom sheet drag handle -->
     <color name="drag_handle">#D1D5DB</color>
     <color name="drag_handle_dark">#374151</color>
-    <color name="selector_nav_icon">#2E7D32</color>
+    <!-- Nav bar active-indicator pill (low-opacity purple behind active icon) -->
+    <color name="ds_nav_indicator">#267C3AED</color>
+    <color name="selector_nav_icon">#A78BFA</color>
 
     <!-- Cellular info screen — forced dark theme to match reference design -->
     <color name="cellular_bg">#141A26</color>           <!-- Page background (dark navy) -->
@@ -70,6 +72,12 @@
     <color name="map_legend_tab_bg">#F2F2F7</color>
     <color name="map_layer_panel_bg">#E6282830</color>
 
+    <!-- Sync status card — Settings screen -->
+    <color name="sync_pending_bg">#FEF3C7</color>       <!-- Light amber icon circle bg -->
+    <color name="sync_pending_stroke">#F59E0B</color>   <!-- Amber card border -->
+    <color name="sync_synced_bg">#DCFCE7</color>        <!-- Light green icon circle bg -->
+    <color name="sync_synced_stroke">#22C55E</color>    <!-- Green card border -->
+
     <!-- Speed test screen — CoverageMap dark theme -->
     <color name="speed_bg">#0E0E1A</color>
     <color name="speed_surface">#1E1E30</color>
@@ -80,5 +88,45 @@
     <color name="speed_gradient_start">#6C63FF</color>
     <color name="speed_gradient_mid">#A855F7</color>
     <color name="speed_gradient_end">#EC4899</color>
+
+    <!-- ── 2025 Design System ────────────────────────────────────────────── -->
+    <!-- Backgrounds -->
+    <color name="ds_bg">#0A0A14</color>
+    <color name="ds_surface_1">#111127</color>
+    <color name="ds_surface_2">#1A1A30</color>
+    <color name="ds_divider">#1E1E3A</color>
+
+    <!-- Primary gradient stops -->
+    <color name="ds_purple">#7C3AED</color>
+    <color name="ds_blue">#2563EB</color>
+    <color name="ds_accent">#A78BFA</color>
+    <color name="ds_accent_blue">#60A5FA</color>
+
+    <!-- Pulse rings (alpha encoded in color) -->
+    <color name="ds_pulse_1">#337C3AED</color>
+    <color name="ds_pulse_2">#1A7C3AED</color>
+    <color name="ds_pulse_3">#0D7C3AED</color>
+
+    <!-- Text -->
+    <color name="ds_text_primary">#FFFFFF</color>
+    <color name="ds_text_secondary">#94A3B8</color>
+    <color name="ds_text_muted">#64748B</color>
+
+    <!-- Semantic -->
+    <color name="ds_success">#22C55E</color>
+    <color name="ds_warning">#F59E0B</color>
+    <color name="ds_error">#EF4444</color>
+
+    <!-- Network type badge backgrounds -->
+    <color name="ds_badge_5g">#1F1245</color>
+    <color name="ds_badge_lte">#0D1F45</color>
+    <color name="ds_badge_wifi">#0D2D1F</color>
+
+    <!-- Interpretation card -->
+    <color name="ds_interp_bg">#12112A</color>
+    <color name="ds_interp_border">#2E1F6A</color>
+
+    <!-- Stats card -->
+    <color name="ds_stat_bg">#0F1120</color>
 
 </resources>

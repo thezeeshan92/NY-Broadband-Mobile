@@ -1,6 +1,10 @@
 package com.nybroadband.mobile.presentation.test
 
 import android.Manifest
+import android.animation.ObjectAnimator
+import android.animation.AnimatorSet
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -16,6 +20,7 @@ import android.telephony.TelephonyManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -53,6 +58,8 @@ class SpeedTestFragment : Fragment() {
     // Set when the user taps "Open Settings" so we can re-check on resume.
     private var awaitingSettingsReturn = false
 
+    private var pulseAnimatorSet: AnimatorSet? = null
+
     // ── Permission launcher ───────────────────────────────────────────────────
 
     private val locationPermissionLauncher = registerForActivityResult(
@@ -85,6 +92,7 @@ class SpeedTestFragment : Fragment() {
         populateDeviceInfo()
         setupContextTabs()
         setupClickListeners()
+        startPulseAnimation()
     }
 
     override fun onResume() {
@@ -152,14 +160,48 @@ class SpeedTestFragment : Fragment() {
         selectedContextTab = index
         contextTabs.forEachIndexed { i, tab ->
             if (i == index) {
-                tab.setBackgroundResource(R.drawable.bg_speed_context_tab_selected)
+                tab.setBackgroundResource(R.drawable.bg_ds_tab_selected)
                 tab.setTextColor(0xFFFFFFFF.toInt())
                 tab.setTypeface(null, Typeface.BOLD)
             } else {
-                tab.setBackgroundResource(R.drawable.bg_speed_context_tab_unselected)
-                tab.setTextColor(0xFFAAAAAA.toInt())
+                tab.setBackgroundResource(R.drawable.bg_ds_tab_unselected)
+                tab.setTextColor(0xFF94A3B8.toInt())
                 tab.setTypeface(null, Typeface.NORMAL)
             }
+        }
+    }
+
+    // ── Pulse animation ───────────────────────────────────────────────────────
+
+    private fun startPulseAnimation() {
+        val ring1 = binding.pulseRing1
+        val ring2 = binding.pulseRing2
+        val ring3 = binding.pulseRing3
+
+        fun pulseRing(view: View, delay: Long): AnimatorSet {
+            val scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 1.08f, 1f)
+            val scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 1.08f, 1f)
+            val alpha  = ObjectAnimator.ofFloat(view, "alpha",  0.7f, 0.3f, 0.7f)
+            return AnimatorSet().apply {
+                playTogether(scaleX, scaleY, alpha)
+                duration = 2400
+                startDelay = delay
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+        }
+
+        val set1 = pulseRing(ring1, 0L)
+        val set2 = pulseRing(ring2, 400L)
+        val set3 = pulseRing(ring3, 800L)
+
+        pulseAnimatorSet = AnimatorSet().apply {
+            playTogether(set1, set2, set3)
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (isAdded && view != null) start()
+                }
+            })
+            start()
         }
     }
 
@@ -261,6 +303,8 @@ class SpeedTestFragment : Fragment() {
             !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)
 
     override fun onDestroyView() {
+        pulseAnimatorSet?.cancel()
+        pulseAnimatorSet = null
         super.onDestroyView()
         _binding = null
     }

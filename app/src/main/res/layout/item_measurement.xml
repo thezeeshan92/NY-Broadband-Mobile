@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    RecyclerView row for a single MeasurementEntity in the Results list.
-    TODO: wire to MeasurementAdapter in a future iteration.
+    Measurement list row — 2025 redesign.
+    All original view IDs preserved for MeasurementAdapter.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -11,23 +11,25 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="@dimen/screen_margin"
     android:layout_marginVertical="4dp"
-    app:cardCornerRadius="@dimen/card_corner_radius"
+    app:cardCornerRadius="14dp"
     app:cardElevation="0dp"
     app:cardBackgroundColor="?attr/colorSurfaceVariant"
-    app:strokeWidth="0dp">
+    app:strokeWidth="1dp"
+    app:strokeColor="?attr/colorOutlineVariant">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="@dimen/card_padding">
+        android:paddingHorizontal="@dimen/card_padding"
+        android:paddingVertical="14dp">
 
-        <!-- Signal tier color dot -->
+        <!-- Signal tier color dot — larger, more visible -->
         <View
             android:id="@+id/signalDot"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
             android:background="@drawable/bg_signal_dot" />
 
         <!-- Text content -->
@@ -35,7 +37,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:orientation="vertical">
 
             <TextView
@@ -45,26 +47,37 @@
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorOnSurface"
-                tools:text="Good" />
+                tools:text="Good Signal" />
 
             <TextView
                 android:id="@+id/tvNetworkInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:textSize="13sp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="4G LTE · Verizon" />
 
             <!-- Speed summary — only visible for speed test rows -->
-            <TextView
-                android:id="@+id/tvSpeedSummary"
+            <LinearLayout
+                android:id="@+id/layoutSpeedSummary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textSize="12sp"
-                android:textColor="?attr/colorPrimary"
-                android:visibility="gone"
-                tools:text="↓ 23.4  ↑ 8.1 Mbps" />
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvSpeedSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorPrimary"
+                    android:textStyle="bold"
+                    tools:text="↓ 23.4  ↑ 8.1 Mbps" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -83,15 +96,15 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="3:42 PM" />
 
-            <!-- Only visible for PENDING or FAILED — hidden for UPLOADED -->
             <TextView
                 android:id="@+id/tvSyncStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="11sp"
+                android:layout_marginTop="3dp"
+                android:textSize="10sp"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone"
-                tools:text="Waiting to upload" />
+                tools:text="Pending" />
 
         </LinearLayout>
 

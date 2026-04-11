@@ -30,11 +30,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="?attr/colorSurface"
+        android:background="@color/ds_surface_1"
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled"
-        app:itemIconTint="@color/selector_nav_icon"
-        app:itemTextColor="@color/selector_nav_icon"
-        app:elevation="8dp" />
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
+        app:elevation="0dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -10,4 +10,9 @@
         <item quantity="one">%d measurement</item>
         <item quantity="other">%,d measurements</item>
     </plurals>
+
+    <plurals name="settings_sync_pending_subtitle">
+        <item quantity="one">%1$d item waiting to upload</item>
+        <item quantity="other">%1$d items waiting to upload</item>
+    </plurals>
 </resources>

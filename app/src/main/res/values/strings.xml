@@ -155,19 +155,32 @@
     <string name="filter_passive">Passive</string>
     <string name="filter_dead_zones">Dead Zones</string>
     <string name="results_empty_title">No measurements yet</string>
-    <string name="results_empty_body">Run a test or start auto testing\nto see results here.</string>
+    <string name="results_empty_body">Run a speed test to see your results here.\nYour history builds automatically.</string>
+    <string name="results_stat_tests">Total Tests</string>
+    <string name="results_stat_best">Best Download</string>
+    <string name="results_run_first_test">Run Your First Test</string>
 
     <!-- Settings screen — additional rows -->
     <string name="settings_profile">Profile</string>
     <string name="settings_section_collection">Data Collection</string>
     <string name="settings_section_usage">Usage</string>
-    <string name="settings_passive_collection">Passive Collection</string>
-    <string name="settings_passive_collection_desc">Records signal quality in the background every minute</string>
-    <string name="settings_auto_test">Automatic Testing</string>
+    <string name="settings_passive_collection">Background Monitoring</string>
+    <string name="settings_passive_collection_desc">Quietly records signal quality in the background</string>
+    <string name="settings_auto_test">Automatic Speed Testing</string>
     <string name="settings_auto_test_desc">Runs a speed test periodically while you travel</string>
+    <string name="settings_privacy_note">Your location and speed data is anonymized and never sold to third parties.</string>
     <string name="settings_total_measurements">Total Measurements</string>
     <string name="settings_data_this_month">Data Used This Month</string>
     <string name="data_usage_fmt">%.1f MB</string>
+
+    <!-- Sync section -->
+    <string name="settings_section_sync">Sync</string>
+    <string name="settings_sync_pending_title">Unsynced Data</string>
+    <string name="settings_sync_up_to_date_title">All Data Synced</string>
+    <string name="settings_sync_up_to_date_desc">Everything is up to date</string>
+    <string name="settings_sync_now">Upload Now</string>
+    <string name="settings_sync_uploading">Uploading data to server\u2026</string>
+    <string name="settings_sync_error">Upload failed — tap to retry</string>
 
     <!-- Profile screen -->
     <string name="profile_section_account">Account</string>
@@ -182,6 +195,18 @@
 
     <!-- Generic actions -->
     <string name="action_open_settings">Open Settings</string>
+    <string name="action_share">Share Result</string>
+
+    <!-- Result interpretation labels -->
+    <string name="result_interp_excellent">Excellent for 4K streaming, gaming &amp; video calls</string>
+    <string name="result_interp_good">Great for HD streaming &amp; video calls</string>
+    <string name="result_interp_moderate">Good for browsing &amp; standard streaming</string>
+    <string name="result_interp_limited">Limited — basic browsing only</string>
+    <string name="result_interp_poor">Poor — may struggle with most tasks</string>
+
+    <!-- Speed test hint -->
+    <string name="speed_tap_hint">Tap to start speed test</string>
+    <string name="speed_network_label">Network</string>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          ONBOARDING FLOW
