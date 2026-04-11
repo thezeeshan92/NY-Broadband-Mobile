@@ -27,6 +27,8 @@ import com.nybroadband.mobile.databinding.FragmentTestInProgressBinding
 import com.nybroadband.mobile.domain.model.ActiveTestState
 import com.nybroadband.mobile.domain.model.TestConfig
 import com.nybroadband.mobile.domain.model.TestPhase
+import android.graphics.Typeface
+import android.widget.TextView
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -73,6 +75,8 @@ class TestInProgressFragment : Fragment() {
      */
     private var lastRenderedPhase: TestPhase? = null
 
+    private var selectedContextTab = 0
+
     /**
      * Exponential moving average weight for the speed text display.
      * Each incoming reading contributes 35% of its value; prior display retains 65%.
@@ -101,6 +105,7 @@ class TestInProgressFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         populateHeaderInfo()
+        setupContextTabs()
         setupBackPressInterception()
         observeViewModel()
 
@@ -122,6 +127,36 @@ class TestInProgressFragment : Fragment() {
             serverId = arguments?.getString(ARG_SERVER_ID),
         )
         viewModel.startTest(config)
+    }
+
+    // ── Context tabs ──────────────────────────────────────────────────────────
+
+    private fun setupContextTabs() {
+        val tabs: List<TextView> = listOf(
+            binding.testTabIndoors,
+            binding.testTabOutdoors,
+            binding.testTabDriving,
+            binding.testTabOther,
+        )
+        tabs.forEachIndexed { index, tab ->
+            tab.setOnClickListener { selectContextTab(index, tabs) }
+        }
+        selectContextTab(selectedContextTab, tabs)
+    }
+
+    private fun selectContextTab(index: Int, tabs: List<TextView>) {
+        selectedContextTab = index
+        tabs.forEachIndexed { i, tab ->
+            if (i == index) {
+                tab.setBackgroundResource(R.drawable.bg_ds_tab_selected)
+                tab.setTextColor(0xFFFFFFFF.toInt())
+                tab.setTypeface(null, Typeface.BOLD)
+            } else {
+                tab.setBackgroundResource(R.drawable.bg_ds_tab_unselected)
+                tab.setTextColor(0xFF94A3B8.toInt())
+                tab.setTypeface(null, Typeface.NORMAL)
+            }
+        }
     }
 
     // ── Header: carrier + device info ─────────────────────────────────────────
@@ -339,7 +374,12 @@ class TestInProgressFragment : Fragment() {
         }
 
         // ── Upload banner value + mini progress bar ───────────────────────────
-        binding.tvUploadResult.text = if (hasUpload) "%.1f".format(displayUploadMbps) else "--"
+        // Show "Testing…" while upload phase is active but first measurement hasn't arrived.
+        binding.tvUploadResult.text = when {
+            hasUpload -> "%.1f".format(displayUploadMbps)
+            state.phase == TestPhase.UPLOAD -> getString(R.string.test_upload_pending)
+            else -> "--"
+        }
         binding.progressBarUpload.isIndeterminate = false
         binding.progressBarUpload.progress = when (state.phase) {
             TestPhase.LATENCY, TestPhase.DOWNLOAD -> 0

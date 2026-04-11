@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Test In Progress — CoverageMap.com–style dark speedometer UI.
-    Root is ConstraintLayout so the SpeedometerView can expand to fill available
-    space without being squeezed by sibling views on small screens.
+    Test In Progress — premium dark speedometer UI.
+    ConstraintLayout keeps the SpeedometerView as the clear focal point.
+    All original view IDs are preserved for binding compatibility.
 -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,7 +10,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0E0E1A"
+    android:background="@color/ds_bg"
     android:fitsSystemWindows="true">
 
     <!-- ── HEADER: logo + ISP name + close button ──────────────────────────── -->
@@ -21,16 +21,16 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="16dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="12dp"
         android:paddingBottom="10dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="26dp"
-            android:layout_height="26dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:contentDescription="@null"
             android:src="@mipmap/ic_launcher_round" />
 
@@ -45,7 +45,7 @@
                 android:id="@+id/tvCarrierName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/ds_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 tools:text="Verizon Wireless" />
@@ -54,7 +54,7 @@
                 android:id="@+id/tvDeviceInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#9CA3AF"
+                android:textColor="@color/ds_text_muted"
                 android:textSize="12sp"
                 tools:text="Pixel 7 · Wi-Fi" />
         </LinearLayout>
@@ -63,18 +63,19 @@
             android:id="@+id/btnClose"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@drawable/bg_circle_dark"
+            android:background="@drawable/bg_ds_card_sm"
             android:contentDescription="@string/action_close"
             android:padding="8dp"
-            android:src="@drawable/ic_close" />
+            android:src="@drawable/ic_close"
+            app:tint="@color/ds_text_secondary" />
 
     </LinearLayout>
 
-    <!-- ── DL / UL GRADIENT BANNER ─────────────────────────────────────────── -->
+    <!-- ── DL / UL GRADIENT BANNER (reduced height for less dominance) ───────── -->
     <LinearLayout
         android:id="@+id/bannerRow"
         android:layout_width="0dp"
-        android:layout_height="92dp"
+        android:layout_height="76dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/bg_speed_metric_banner"
@@ -90,11 +91,11 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="8dp">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_download_24"
                 app:tint="#CCFFFFFF" />
@@ -102,31 +103,31 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
                 android:text="@string/speed_download_mbps"
                 android:textColor="#CCFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvDownloadResult"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
                 android:text="--"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 tools:text="28.9" />
 
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progressBarDownload"
-                android:layout_width="72dp"
+                android:layout_width="64dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="3dp"
                 android:indeterminate="false"
                 android:progress="0"
-                app:indicatorColor="#FFFFFF"
-                app:trackColor="#44FFFFFF"
+                app:indicatorColor="#CCFFFFFF"
+                app:trackColor="#33FFFFFF"
                 app:trackCornerRadius="2dp"
                 app:trackThickness="3dp" />
         </LinearLayout>
@@ -135,9 +136,9 @@
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="14dp"
-            android:background="#44FFFFFF" />
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="#33FFFFFF" />
 
         <!-- Upload column -->
         <LinearLayout
@@ -146,11 +147,11 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="8dp">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_upload_24"
                 app:tint="#CCFFFFFF" />
@@ -158,31 +159,31 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
                 android:text="@string/speed_upload_mbps"
                 android:textColor="#CCFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvUploadResult"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="1dp"
                 android:text="--"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 tools:text="--" />
 
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/progressBarUpload"
-                android:layout_width="72dp"
+                android:layout_width="64dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="3dp"
                 android:indeterminate="false"
                 android:progress="0"
-                app:indicatorColor="#FFFFFF"
-                app:trackColor="#44FFFFFF"
+                app:indicatorColor="#CCFFFFFF"
+                app:trackColor="#33FFFFFF"
                 app:trackCornerRadius="2dp"
                 app:trackThickness="3dp" />
         </LinearLayout>
@@ -203,11 +204,11 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="13dp"
+            android:layout_height="13dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_schedule_24"
-            app:tint="#9CA3AF" />
+            app:tint="@color/ds_text_muted" />
 
         <TextView
             android:id="@+id/tvLatency"
@@ -216,16 +217,16 @@
             android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:text="@string/speed_ping_placeholder"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/ds_text_muted"
             android:textSize="12sp"
             tools:text="Ping 153 ms" />
 
         <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="13dp"
+            android:layout_height="13dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_wifi_24"
-            app:tint="#9CA3AF" />
+            app:tint="@color/ds_text_muted" />
 
         <TextView
             android:id="@+id/tvDataUsed"
@@ -233,7 +234,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:text="@string/speed_data_placeholder"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/ds_text_muted"
             android:textSize="12sp"
             tools:text="Data 40 MB" />
 
@@ -254,11 +255,11 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_cellular"
-            app:tint="#555570" />
+            app:tint="@color/ds_divider" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/progressBar"
@@ -269,21 +270,21 @@
             android:layout_weight="1"
             android:indeterminate="false"
             android:progress="0"
-            app:indicatorColor="#5B8AF5"
-            app:trackColor="#1E1E2E"
+            app:indicatorColor="@color/ds_accent"
+            app:trackColor="@color/ds_divider"
             app:trackCornerRadius="3dp"
             app:trackThickness="4dp" />
 
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_wifi_24"
-            app:tint="#555570" />
+            app:tint="@color/ds_divider" />
 
     </LinearLayout>
 
-    <!-- ── SPEEDOMETER (capped height so it never dominates the screen) ─────── -->
+    <!-- ── SPEEDOMETER (primary focal point — fills available space) ─────────── -->
     <com.nybroadband.mobile.presentation.test.SpeedometerView
         android:id="@+id/speedometerView"
         android:layout_width="0dp"
@@ -292,8 +293,8 @@
         app:layout_constraintBottom_toTopOf="@id/tvSpeedNumber"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_min="120dp"
-        app:layout_constraintHeight_max="190dp"
+        app:layout_constraintHeight_min="130dp"
+        app:layout_constraintHeight_max="200dp"
         app:layout_constraintVertical_bias="0.0" />
 
     <!-- ── CURRENT SPEED NUMBER ──────────────────────────────────────────────── -->
@@ -303,10 +304,11 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="--"
-        android:textColor="#FFFFFF"
-        android:textSize="52sp"
+        android:textColor="@color/ds_text_primary"
+        android:textSize="54sp"
         android:textStyle="bold"
         android:includeFontPadding="false"
+        android:letterSpacing="-0.02"
         app:layout_constraintBottom_toTopOf="@id/tvSpeedUnit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -319,8 +321,9 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/test_speed_unit_mbps"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/ds_text_secondary"
         android:textSize="14sp"
+        android:letterSpacing="0.04"
         app:layout_constraintBottom_toTopOf="@id/tvPhaseLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -332,12 +335,12 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="@string/test_phase_starting"
-        android:textColor="#8888CC"
-        android:textSize="12sp"
+        android:textColor="@color/ds_accent"
+        android:textSize="11sp"
         android:textStyle="bold"
         android:textAllCaps="true"
-        android:letterSpacing="0.06"
-        android:layout_marginBottom="6dp"
+        android:letterSpacing="0.08"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@id/phaseDotsRow"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -349,7 +352,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@id/contextTabsScroll"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -362,9 +365,9 @@
             android:contentDescription="@string/test_phase_latency" />
 
         <View
-            android:layout_width="24dp"
+            android:layout_width="28dp"
             android:layout_height="2dp"
-            android:background="#3A3A5E" />
+            android:background="@color/ds_divider" />
 
         <TextView
             android:id="@+id/dotDownload"
@@ -374,9 +377,9 @@
             android:contentDescription="@string/test_phase_download" />
 
         <View
-            android:layout_width="24dp"
+            android:layout_width="28dp"
             android:layout_height="2dp"
-            android:background="#3A3A5E" />
+            android:background="@color/ds_divider" />
 
         <TextView
             android:id="@+id/dotUpload"
@@ -397,7 +400,7 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:text="0.00%" />
 
-    <!-- ── CONTEXT TABS ─────────────────────────────────────────────────────── -->
+    <!-- ── CONTEXT TABS (pill segmented control) ──────────────────────────────── -->
     <HorizontalScrollView
         android:id="@+id/contextTabsScroll"
         android:layout_width="0dp"
@@ -406,7 +409,7 @@
         android:overScrollMode="never"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="6dp"
+        android:paddingBottom="8dp"
         android:scrollbars="none"
         app:layout_constraintBottom_toTopOf="@id/locationRow"
         app:layout_constraintStart_toStartOf="parent"
@@ -415,13 +418,14 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/testTabIndoors"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
-                android:background="@drawable/bg_speed_context_tab_selected"
+                android:background="@drawable/bg_ds_tab_selected"
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
@@ -435,12 +439,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
                 android:layout_marginStart="6dp"
-                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:background="@drawable/bg_ds_tab_unselected"
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/speed_context_outdoors"
-                android:textColor="#888888"
+                android:textColor="@color/ds_text_secondary"
                 android:textSize="13sp" />
 
             <TextView
@@ -448,12 +452,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
                 android:layout_marginStart="6dp"
-                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:background="@drawable/bg_ds_tab_unselected"
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/speed_context_driving"
-                android:textColor="#888888"
+                android:textColor="@color/ds_text_secondary"
                 android:textSize="13sp" />
 
             <TextView
@@ -461,12 +465,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
                 android:layout_marginStart="6dp"
-                android:background="@drawable/bg_speed_context_tab_unselected"
+                android:background="@drawable/bg_ds_tab_unselected"
                 android:gravity="center"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/speed_context_other"
-                android:textColor="#888888"
+                android:textColor="@color/ds_text_secondary"
                 android:textSize="13sp" />
 
         </LinearLayout>
@@ -479,19 +483,19 @@
         android:layout_height="50dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="10dp"
-        android:background="@drawable/bg_speed_dark_surface"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_ds_location_row"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:contentDescription="@null"
             android:src="@drawable/flag_us_badge" />
 
@@ -501,14 +505,15 @@
             android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:text="@string/speed_location_default"
-            android:textColor="#CCCCCC"
-            android:textSize="13sp" />
+            android:textColor="@color/ds_text_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/speed_location_change"
-            android:textColor="#5B8AF5"
+            android:textColor="@color/ds_accent"
             android:textSize="12sp" />
 
         <ImageView
@@ -518,7 +523,7 @@
             android:contentDescription="@null"
             android:src="@drawable/ic_arrow_back"
             android:rotation="180"
-            app:tint="#5B8AF5" />
+            app:tint="@color/ds_accent" />
 
     </LinearLayout>
 

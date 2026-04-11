@@ -321,6 +321,7 @@
     <string name="test_phase_download">Download</string>
     <string name="test_phase_upload">Upload</string>
     <string name="test_phase_starting">Starting…</string>
+    <string name="test_upload_pending">Testing…</string>
     <string name="test_phase_done">Done</string>
     <string name="test_phase_failed">Failed</string>
     <string name="test_speed_unit_mbps">Mbps</string>
